@@ -36,5 +36,6 @@ jobs:
         env:
           TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
           TRIGGER_API_URL: ${{ secrets.TRIGGER_API_URL }}
+          REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
         run: |
-          bunx trigger.dev@latest deploy --self-hosted --push
+          bunx trigger.dev@latest deploy --self-hosted --push --registry $REGISTRY_URL
