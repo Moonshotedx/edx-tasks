@@ -1,15 +1,7 @@
 # edx-tasks
 
-To install dependencies:
+All async tasks for edx platform.
 
-```bash
-bun install
-```
+All updates to the main branch will be deployed.
 
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.1.34. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+To add tasks use the examples from the [docs](https://trigger.dev/docs/guides/frameworks/bun)
