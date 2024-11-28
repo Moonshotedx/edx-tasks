@@ -43,7 +43,10 @@ jobs:
           echo "Using TRIGGER_API_URL: $TRIGGER_API_URL"
           echo "Using REGISTRY_URL: $REGISTRY_URL"
 
-          # Pass the variables explicitly to the command
-          bunx trigger.dev@latest deploy --self-hosted --push --registry "$REGISTRY_URL" \
-            --access-token "$TRIGGER_ACCESS_TOKEN" \
-            --api-url "$TRIGGER_API_URL"
+          # Export required variables so they are part of the environment for the command
+          export TRIGGER_ACCESS_TOKEN=$TRIGGER_ACCESS_TOKEN
+          export TRIGGER_API_URL=$TRIGGER_API_URL
+          export REGISTRY_URL=$REGISTRY_URL
+
+          # Execute the bunx command
+          bunx trigger.dev@latest deploy --self-hosted --push --registry "$REGISTRY_URL"
