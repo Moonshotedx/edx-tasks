@@ -20,11 +20,11 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      # docker setup - part 1
+      # Docker setup - part 1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # docker setup - part 2
+      # Docker setup - part 2
       - name: Login to Ark registry
         uses: docker/login-action@v3
         with:
@@ -32,21 +32,22 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
+      # Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
       - name: 🚀 Deploy Tasks
         env:
           TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
           TRIGGER_API_URL: ${{ secrets.TRIGGER_API_URL }}
           REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
         run: |
-          # Log environment variables to ensure they're available
+          # Log environment variables
           echo "Using TRIGGER_ACCESS_TOKEN: ${TRIGGER_ACCESS_TOKEN:0:4}****"
           echo "Using TRIGGER_API_URL: $TRIGGER_API_URL"
           echo "Using REGISTRY_URL: $REGISTRY_URL"
 
-          # Export required variables so they are part of the environment for the command
-          export TRIGGER_ACCESS_TOKEN=$TRIGGER_ACCESS_TOKEN
-          export TRIGGER_API_URL=$TRIGGER_API_URL
-          export REGISTRY_URL=$REGISTRY_URL
-
-          # Execute the bunx command
-          bunx trigger.dev@latest deploy --self-hosted --push --registry "$REGISTRY_URL"
+          # Run the deployment task using npx
+          npx trigger.dev@latest deploy --self-hosted --push --registry "$REGISTRY_URL"
