@@ -50,4 +50,4 @@ jobs:
           echo "Using REGISTRY_URL: $REGISTRY_URL"
 
           # Run the deployment task using npx
-          npx trigger.dev@latest deploy --self-hosted --push --registry "$REGISTRY_URL"
+          npx trigger.dev@latest deploy --self-hosted --push --registry "$REGISTRY_URL" -a "$TRIGGER_API_URL"
