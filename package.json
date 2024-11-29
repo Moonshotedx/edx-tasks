@@ -12,7 +12,8 @@
   "dependencies": {
     "@trigger.dev/sdk": "3.3.0",
     "makima-ts": "1.0.0-alpha.4",
-    "redis": "^4.7.0"
+    "redis": "^4.7.0",
+    "zod": "^3.23.8"
   },
   "trustedDependencies": [
     "protobufjs"
