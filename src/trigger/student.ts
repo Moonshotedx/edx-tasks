@@ -4,6 +4,11 @@ import { z } from "zod";
 
 export const generateInpirationalMessage = schemaTask({
   id: "inspire-student",
+  retry: {
+    maxAttempts: 10,
+    factor: 1.5,
+    randomize: true,
+  },
   // Set an optional maxDuration to prevent tasks from running indefinitely
   maxDuration: 300, // Stop executing after 300 secs (5 mins) of compute
   schema: z.object({
@@ -19,32 +24,49 @@ export const generateInpirationalMessage = schemaTask({
       agent: "interview-coach",
       content: `Hey need help generating some one liner instpirational messages for ${payload.name}.
 
+
+This message should be based on the user's aspiring companies and job roles.
+
+Make sure the message is personal and specific to the above student.
+
+Here is the students current details:
+${JSON.stringify(payload, null, 2)}
+
 The response must be in the following json format:
 \`\`\`
 {
   message: string; // max 100 characters
 }
 \`\`\`
-
-This message should be based on the user's aspiring companies and job roles.
-
-Make sure the message is personal and specific to the above student.
 `,
       name: "mentor",
     });
 
-    logger.log("Response", { res });
+    logger.log("Raw response", { res });
 
-    return res;
+    // validate the response;
+    const responseSchema = z.object({
+      message: z.string(),
+    });
+
+    const jsonParsed = JSON.parse(res);
+
+    const parsedOutput = responseSchema.parse(jsonParsed);
+
+    return parsedOutput;
   },
 });
 
 export const generateCareerProgress = schemaTask({
   id: "get-career-progress",
+  retry: {
+    maxAttempts: 10,
+    factor: 1.5,
+    randomize: true,
+  },
   schema: z.object({
     name: z.string(),
     email: z.string().email(),
-    // aspiring_companies: z.array(z.string()),
     aspiring_job_roles: z.array(z.string()),
     projects_done: z.array(z.any()),
     education_experiences: z.array(z.any()),
@@ -76,8 +98,23 @@ The response must be in the following json format:
       name: "mentor",
     });
 
-    logger.log("Response", { res });
+    logger.log("Raw response", { res });
 
-    return res;
+    // validate the response;
+    const responseSchema = z.object({
+      aspiring_job_roles: z.array(
+        z.object({
+          role: z.string(),
+          progress: z.number(),
+          message: z.string(),
+        }),
+      ),
+    });
+
+    const jsonParsed = JSON.parse(res);
+
+    const parsedOutput = responseSchema.parse(jsonParsed);
+
+    return parsedOutput;
   },
 });
