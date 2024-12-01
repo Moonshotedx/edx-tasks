@@ -17,8 +17,6 @@ export const load = schemaTask({
   run: async (payload, { ctx }) => {
     logger.log("Payload", { payload, ctx });
 
-    // await wait.for({ seconds: payload.timout ?? 10 });
-
     const startTime = Date.now();
     const timeoutMs = (payload.timout ?? 10) * 1000;
 

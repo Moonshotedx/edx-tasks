@@ -1,6 +1,7 @@
-import { logger, schemaTask } from "@trigger.dev/sdk/v3";
+import { idempotencyKeys, logger, runs, schemaTask } from "@trigger.dev/sdk/v3";
 import { chat } from "../lib/makima";
 import { z } from "zod";
+import { createHash } from "crypto";
 
 export const generateInpirationalMessage = schemaTask({
   id: "inspire-student",
@@ -118,3 +119,425 @@ The response must be in the following json format:
     return parsedOutput;
   },
 });
+
+export const generateImprovementActionPlan = schemaTask({
+  id: "generate-improvement-action-plan",
+  retry: {
+    maxAttempts: 10,
+    factor: 1.5,
+    randomize: true,
+  },
+  schema: z.object({
+    name: z.string(),
+    email: z.string().email(),
+    aspiring_job_roles: z.array(z.string()),
+    projects_done: z.array(z.any()),
+    education_experiences: z.array(z.any()),
+    certifications: z.array(z.any()),
+  }),
+
+  run: async (payload, { ctx }) => {
+    logger.log("Payload", { payload, ctx });
+    const res = await chat({
+      agent: "interview-coach",
+      content: `Hey need help generating an improvement action plan for ${payload.name}.
+
+Here is the students current details:
+${JSON.stringify(payload, null, 2)}
+
+Use the above details to generate a improvement action plan for the following parts of the student's profile:
+1. Skills: Give points on how the student can improve their skills to better match their aspiring job roles/jobs.
+2. Experience: Give points on how the student can improve their experience to better match their aspiring job roles/jobs.
+3. Network: Give points on how the student can improve their network to better match their aspiring job roles/jobs.
+4. Education: Give points on how the student can improve their education to better match their aspiring job roles/jobs **if** they have not already done so.
+
+All of the above keys are optional and can be skipped if the student has already done enough to match their aspiring job roles/jobs in context of that key.
+
+The response must be in the following json format:
+\`\`\`
+{
+  skills?: {
+    subtitle: string;
+    points: string[];
+  },
+  experience?: {
+    subtitle: string;
+    points: string[];
+  },
+  network?: {
+    subtitle: string;
+    points: string[];
+  },
+  education?: {
+    subtitle: string;
+    points: string[];
+  }
+}
+\`\`\`
+
+NOTE: Subtitle in the above is gonna be shown under the respective key as a subtitle for that catagory of points.
+`,
+      name: "mentor",
+    });
+
+    logger.log("Raw response", { res });
+
+    // validate the response;
+    const responseSchema = z.object({
+      skills: z
+        .object({
+          subtitle: z.string(),
+          points: z.array(z.string()),
+        })
+        .optional(),
+      experience: z
+        .object({
+          subtitle: z.string(),
+          points: z.array(z.string()),
+        })
+        .optional(),
+      network: z
+        .object({
+          subtitle: z.string(),
+          points: z.array(z.string()),
+        })
+        .optional(),
+      education: z
+        .object({
+          subtitle: z.string(),
+          points: z.array(z.string()),
+        })
+        .optional(),
+    });
+
+    const jsonParsed = JSON.parse(res);
+
+    const parsedOutput = responseSchema.parse(jsonParsed);
+
+    return parsedOutput;
+  },
+});
+
+export const generateRecommendedProjectIdeas = schemaTask({
+  id: "generate-recommended-project-ideas",
+  retry: {
+    maxAttempts: 10,
+    factor: 1.5,
+    randomize: true,
+  },
+  schema: z.object({
+    name: z.string(),
+    email: z.string().email(),
+    aspiring_job_roles: z.array(z.string()),
+    projects_done: z.array(z.any()),
+    education_experiences: z.array(z.any()),
+    certifications: z.array(z.any()),
+  }),
+
+  run: async (payload, { ctx }) => {
+    logger.log("Payload", { payload, ctx });
+    const res = await chat({
+      agent: "interview-coach",
+      content: `Hey need help generating some project ideas for ${payload.name}.
+Here is the students current details:
+${JSON.stringify(payload, null, 2)}
+
+Use the above details to generate a list of project ideas that the student can work on to improve their skills and experience to better match their aspiring job roles/jobs.
+
+The response must be in the following json format:
+\`\`\`
+{
+  projects: {
+    title: string;
+    description: string;
+    resources?: string[]; // links to resources that can help the student in building the project.
+  }[]
+}
+\`\`\`
+`,
+      name: "mentor",
+    });
+
+    logger.log("Raw response", { res });
+
+    // validate the response;
+    const responseSchema = z.object({
+      projects: z.array(
+        z.object({
+          title: z.string(),
+          description: z.string(),
+          resources: z.array(z.string()).optional(),
+        }),
+      ),
+    });
+
+    const jsonParsed = JSON.parse(res);
+
+    const parsedOutput = responseSchema.parse(jsonParsed);
+
+    return parsedOutput;
+  },
+});
+
+export const generateResourceRecommendations = schemaTask({
+  id: "generate-resource-recommendations",
+  retry: {
+    maxAttempts: 10,
+    factor: 1.5,
+    randomize: true,
+  },
+  schema: z.object({
+    name: z.string(),
+    email: z.string().email(),
+    aspiring_job_roles: z.array(z.string()),
+    projects_done: z.array(z.any()),
+    education_experiences: z.array(z.any()),
+    certifications: z.array(z.any()),
+  }),
+
+  run: async (payload, { ctx }) => {
+    logger.log("Payload", { payload, ctx });
+    const res = await chat({
+      agent: "resource-finder",
+      content: `Hey need help finding some resources a student.
+
+Here is the students current details:
+${JSON.stringify(payload, null, 2)}
+
+Use the above details to find a list of resources that the student can use to improve their skills and experience to better match their aspiring job roles/jobs.
+
+The response must be in the following json format:
+{
+  resources: {
+    title: string;
+    description: string;
+    link: string;
+  }[]
+}
+
+Make sure to fetch a single result when searching knowledge base per topic, if the data is too much then you dont have to search other topics.
+
+Reply in just json format, do not wrap the json in code block.
+`,
+      name: "mentor",
+    });
+
+    logger.log("Raw response", { res });
+
+    // validate the response;
+    const responseSchema = z.object({
+      resources: z.array(
+        z.object({
+          title: z.string(),
+          description: z.string(),
+          link: z.string(),
+        }),
+      ),
+    });
+
+    const jsonParsed = JSON.parse(res);
+
+    const parsedOutput = responseSchema.parse(jsonParsed);
+
+    return parsedOutput;
+  },
+});
+
+export const generateStudentPrepPack = schemaTask({
+  id: "generate-student-prep-pack",
+  retry: {
+    maxAttempts: 10,
+    factor: 1.5,
+    randomize: true,
+  },
+  schema: z.object({
+    name: z.string(),
+    email: z.string().email(),
+    aspiring_companies: z.array(z.string()),
+    aspiring_job_roles: z.array(z.string()),
+    projects_done: z.array(z.any()),
+    education_experiences: z.array(z.any()),
+    certifications: z.array(z.any()),
+  }),
+
+  run: async (payload) => {
+    logger.log("env", { env: process.env.NODE_ENV });
+
+    const keys = {
+      inspirationalMessage: await idempotencyKeys.create(
+        generateHash({
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          name: payload.name,
+          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+        }),
+      ),
+      careerProgress: await idempotencyKeys.create(
+        generateHash({
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          name: payload.name,
+          projects_done: payload.projects_done,
+          education_experiences: payload.education_experiences,
+          certifications: payload.certifications,
+          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+        }),
+      ),
+      improvementActionPlan: await idempotencyKeys.create(
+        generateHash({
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          name: payload.name,
+          projects_done: payload.projects_done,
+          education_experiences: payload.education_experiences,
+          certifications: payload.certifications,
+          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+        }),
+      ),
+      recommendedProjectIdeas: await idempotencyKeys.create(
+        generateHash({
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          name: payload.name,
+          projects_done: payload.projects_done,
+          education_experiences: payload.education_experiences,
+          certifications: payload.certifications,
+          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+        }),
+      ),
+      resourceRecommendations: await idempotencyKeys.create(
+        generateHash({
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          name: payload.name,
+          projects_done: payload.projects_done,
+          education_experiences: payload.education_experiences,
+          certifications: payload.certifications,
+          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+        }),
+      ),
+    };
+
+    logger.log("Idempotency keys generated");
+
+    const [
+      inspirationalMessage,
+      careerProgress,
+      improvementActionPlan,
+      recommendedProjectIdeas,
+      resourceRecommendations,
+    ] = await Promise.all([
+      await generateInpirationalMessage.trigger(
+        {
+          name: payload.name,
+          email: payload.email,
+          aspiring_companies: payload.aspiring_companies,
+          aspiring_job_roles: payload.aspiring_job_roles,
+        },
+        {
+          idempotencyKey: keys.inspirationalMessage,
+          idempotencyKeyTTL:
+            process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        },
+      ),
+      generateCareerProgress.trigger(
+        {
+          name: payload.name,
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          projects_done: payload.projects_done,
+          education_experiences: payload.education_experiences,
+          certifications: payload.certifications,
+        },
+        {
+          idempotencyKey: keys.careerProgress,
+          idempotencyKeyTTL:
+            process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        },
+      ),
+      generateImprovementActionPlan.trigger(
+        {
+          name: payload.name,
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          projects_done: payload.projects_done,
+          education_experiences: payload.education_experiences,
+          certifications: payload.certifications,
+        },
+        {
+          idempotencyKey: keys.improvementActionPlan,
+          idempotencyKeyTTL:
+            process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        },
+      ),
+      generateRecommendedProjectIdeas.trigger(
+        {
+          name: payload.name,
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          projects_done: payload.projects_done,
+          education_experiences: payload.education_experiences,
+          certifications: payload.certifications,
+        },
+        {
+          idempotencyKey: keys.recommendedProjectIdeas,
+          idempotencyKeyTTL:
+            process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        },
+      ),
+      generateResourceRecommendations.trigger(
+        {
+          name: payload.name,
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          projects_done: payload.projects_done,
+          education_experiences: payload.education_experiences,
+          certifications: payload.certifications,
+        },
+        {
+          idempotencyKey: keys.resourceRecommendations,
+          idempotencyKeyTTL:
+            process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        },
+      ),
+    ]);
+
+    logger.log("All tasks triggered");
+
+    const groupPoll = await Promise.all([
+      runs.poll(inspirationalMessage, {
+        pollIntervalMs: 1000,
+      }),
+      runs.poll(careerProgress, {
+        pollIntervalMs: 2000,
+      }),
+      runs.poll(improvementActionPlan, {
+        pollIntervalMs: 3000,
+      }),
+      runs.poll(recommendedProjectIdeas, {
+        pollIntervalMs: 4000,
+      }),
+      runs.poll(resourceRecommendations, {
+        pollIntervalMs: 5000,
+      }),
+    ]);
+
+    const final = {
+      inspirationalMessage: groupPoll[0].output,
+      careerProgress: groupPoll[1].output,
+      improvementActionPlan: groupPoll[2].output,
+      recommendedProjectIdeas: groupPoll[3].output,
+      resourceRecommendations: groupPoll[4].output,
+    };
+
+    logger.log("All tasks completed", final);
+
+    return final;
+  },
+});
+
+function generateHash(payload: object) {
+  const hash = createHash("sha256");
+  hash.update(JSON.stringify(payload));
+  return hash.digest("hex");
+}

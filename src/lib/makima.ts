@@ -83,3 +83,31 @@ export async function chat({
   };
   return message.content;
 }
+
+export async function searchKnowledgeBase<T>({
+  name,
+  query,
+  k,
+}: {
+  name: string;
+  query: string;
+  k: number;
+}) {
+  const response = await fetch(
+    `${makima_url}/knowledge/${name}/search?q=${encodeURIComponent(query)}&k=${k}`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+  const result = await response.json();
+  const results = result as {
+    id: string;
+    content: string;
+    model: string;
+    metadata: T;
+  }[];
+
+  return results;
+}
