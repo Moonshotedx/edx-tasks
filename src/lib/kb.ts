@@ -20,11 +20,11 @@ interface Document {
   createdAt?: string;
 }
 
-interface SearchResult {
+interface SearchResult<T = Record<string, unknown>> {
   id: string;
   content: string;
   model: string;
-  metadata?: Record<string, unknown>;
+  metadata?: T;
   similarity: number;
 }
 
@@ -128,12 +128,12 @@ class MakimaKB {
     return response.data;
   }
 
-  async searchKnowledgeBase(
+  async searchKnowledgeBase<T>(
     name: string,
     query: string,
     k: number,
     model?: string,
-  ): Promise<SearchResult[]> {
+  ): Promise<SearchResult<T>[]> {
     const config: AxiosRequestConfig = {
       params: {
         q: query,
@@ -141,7 +141,7 @@ class MakimaKB {
         model,
       },
     };
-    const response: AxiosResponse<SearchResult[]> = await this.client.get(
+    const response: AxiosResponse<SearchResult<T>[]> = await this.client.get(
       `/knowledge/${name}/search`,
       config,
     );

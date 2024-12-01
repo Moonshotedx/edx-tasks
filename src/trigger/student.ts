@@ -1,5 +1,5 @@
 import { idempotencyKeys, logger, runs, schemaTask } from "@trigger.dev/sdk/v3";
-import { chat } from "../lib/makima";
+import { chat, searchKnowledgeBase } from "../lib/makima";
 import { z } from "zod";
 import { createHash } from "crypto";
 
@@ -290,56 +290,108 @@ export const generateResourceRecommendations = schemaTask({
     name: z.string(),
     email: z.string().email(),
     aspiring_job_roles: z.array(z.string()),
-    projects_done: z.array(z.any()),
-    education_experiences: z.array(z.any()),
-    certifications: z.array(z.any()),
+    projects_done: z.array(z.unknown()),
+    education_experiences: z.array(z.unknown()),
+    certifications: z.array(z.unknown()),
   }),
 
   run: async (payload, { ctx }) => {
     logger.log("Payload", { payload, ctx });
-    const res = await chat({
-      agent: "resource-finder",
-      content: `Hey need help finding some resources a student.
 
-Here is the students current details:
-${JSON.stringify(payload, null, 2)}
+    type YoutubeMetadata = {
+      url: string;
+      start: number;
+      title: string;
+      channel: string;
+      videoId: string;
+      duration: number;
+      description: string;
+    };
 
-Use the above details to find a list of resources that the student can use to improve their skills and experience to better match their aspiring job roles/jobs.
-
-The response must be in the following json format:
-{
-  resources: {
-    title: string;
-    description: string;
-    link: string;
-  }[]
-}
-
-Make sure to fetch a single result when searching knowledge base per topic, if the data is too much then you dont have to search other topics.
-
-Reply in just json format, do not wrap the json in code block.
-`,
-      name: "mentor",
-    });
-
-    logger.log("Raw response", { res });
-
-    // validate the response;
-    const responseSchema = z.object({
-      resources: z.array(
-        z.object({
-          title: z.string(),
-          description: z.string(),
-          link: z.string(),
+    const [
+      resourcesBasedOnJobRoles,
+      resourcesBasedOnProjects,
+      resourcesBasedOnEducation,
+      resourcesBasedOnCertifications,
+    ] = await Promise.all([
+      Promise.allSettled(
+        payload.aspiring_job_roles.map(async (role) => {
+          const res = await searchKnowledgeBase<YoutubeMetadata>({
+            name: "youtube-videos",
+            query: role,
+            k: 1,
+          });
+          if (res.length === 0) {
+            throw new Error(`No resources found for ${role}`);
+          }
+          return res?.[0];
         }),
       ),
-    });
+      Promise.allSettled(
+        payload.projects_done.map(async (project) => {
+          const res = await searchKnowledgeBase<YoutubeMetadata>({
+            name: "youtube-videos",
+            query: JSON.stringify(project),
+            k: 1,
+          });
+          if (res.length === 0) {
+            throw new Error(`No resources found for ${project}`);
+          }
+          return res?.[0];
+        }),
+      ),
+      Promise.allSettled(
+        payload.education_experiences.map(async (education) => {
+          const res = await searchKnowledgeBase<YoutubeMetadata>({
+            name: "youtube-videos",
+            query: JSON.stringify(education),
+            k: 1,
+          });
+          if (res.length === 0) {
+            throw new Error(`No resources found for ${education}`);
+          }
+          return res?.[0];
+        }),
+      ),
+      Promise.allSettled(
+        payload.certifications.map(async (cert) => {
+          const res = await searchKnowledgeBase<YoutubeMetadata>({
+            name: "youtube-videos",
+            query: JSON.stringify(cert),
+            k: 1,
+          });
+          if (res.length === 0) {
+            throw new Error(`No resources found for ${cert}`);
+          }
+          return res?.[0];
+        }),
+      ),
+    ]);
 
-    const jsonParsed = JSON.parse(res);
+    const resources = [
+      ...resourcesBasedOnJobRoles
+        .filter((r) => r.status === "fulfilled")
+        .map((r) => r.value),
+      ...resourcesBasedOnProjects
+        .filter((r) => r.status === "fulfilled")
+        .map((r) => r.value),
+      ...resourcesBasedOnEducation
+        .filter((r) => r.status === "fulfilled")
+        .map((r) => r.value),
+      ...resourcesBasedOnCertifications
+        .filter((r) => r.status === "fulfilled")
+        .map((r) => r.value),
+    ];
 
-    const parsedOutput = responseSchema.parse(jsonParsed);
-
-    return parsedOutput;
+    const duplicateFilteredResources = resources.filter(
+      (resource, index, self) => {
+        const indexInSelf = self.findIndex(
+          (r) => r.metadata.url === resource.metadata.url,
+        );
+        return index === indexInSelf;
+      },
+    );
+    return duplicateFilteredResources.map((r) => r.metadata);
   },
 });
 
