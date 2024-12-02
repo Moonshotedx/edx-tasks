@@ -12,13 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '16'  # You can specify your desired Node.js version here
+          bun-version: "latest"
 
       - name: Install dependencies
-        run: npm install  # Or use `yarn install` if you're using yarn
+        run: bun install
 
       # docker setup - part 1
       - name: Set up Docker Buildx
@@ -32,20 +32,14 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      # Deploy to Staging
-      - name: 🚀 Deploy to Staging
+      - name: 🚀 Deploy Tasks
         env:
           TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
           TRIGGER_API_URL: ${{ secrets.TRIGGER_API_URL }}
           REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
         run: |
-          npm run deploy --env stg --registry "$REGISTRY_URL"  # Modify your deploy script to handle env
+          # Deploy to staging environment
+          bunx trigger.dev@latest deploy --self-hosted --push --registry "$REGISTRY_URL" --env staging
 
-      # Deploy to Production
-      - name: 🚀 Deploy to Production
-        env:
-          TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
-          TRIGGER_API_URL: ${{ secrets.TRIGGER_API_URL }}
-          REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
-        run: |
-          npm run deploy --env prd --registry "$REGISTRY_URL"  # Modify your deploy script to handle env
+          # Deploy to production environment
+          bunx trigger.dev@latest deploy --self-hosted --push --registry "$REGISTRY_URL" --env prod
