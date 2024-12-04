@@ -16,7 +16,7 @@ type YoutubeMetadata = {
 export const generateInpirationalMessage = schemaTask({
   id: "inspire-student",
   retry: {
-    maxAttempts: 10,
+    maxAttempts: 5,
     factor: 1.5,
     randomize: true,
   },
@@ -71,7 +71,7 @@ The response must be in the following json format:
 export const generateCareerProgress = schemaTask({
   id: "get-career-progress",
   retry: {
-    maxAttempts: 10,
+    maxAttempts: 5,
     factor: 1.5,
     randomize: true,
   },
@@ -133,7 +133,7 @@ The response must be in the following json format:
 export const generateImprovementActionPlan = schemaTask({
   id: "generate-improvement-action-plan",
   retry: {
-    maxAttempts: 10,
+    maxAttempts: 5,
     factor: 1.5,
     randomize: true,
   },
@@ -231,7 +231,7 @@ NOTE: Subtitle in the above is gonna be shown under the respective key as a subt
 export const generateRecommendedProjectIdeas = schemaTask({
   id: "generate-recommended-project-ideas",
   retry: {
-    maxAttempts: 10,
+    maxAttempts: 5,
     factor: 1.5,
     randomize: true,
   },
@@ -292,7 +292,7 @@ The response must be in the following json format:
 export const generateResourceRecommendations = schemaTask({
   id: "generate-resource-recommendations",
   retry: {
-    maxAttempts: 10,
+    maxAttempts: 5,
     factor: 1.5,
     randomize: true,
   },
@@ -398,7 +398,7 @@ export const generateResourceRecommendations = schemaTask({
 export const generateStudentPrepPack = schemaTask({
   id: "generate-student-prep-pack",
   retry: {
-    maxAttempts: 10,
+    maxAttempts: 5,
     factor: 1.5,
     randomize: true,
   },
@@ -591,7 +591,7 @@ export const generateStudentPrepPack = schemaTask({
 export const generateInterviewPrepQuestionsPerJobDesc = schemaTask({
   id: "generate-interview-prep-per-jd",
   retry: {
-    maxAttempts: 10,
+    maxAttempts: 5,
     factor: 1.5,
     randomize: true,
   },
