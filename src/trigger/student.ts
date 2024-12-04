@@ -3,6 +3,16 @@ import { chat, searchKnowledgeBase } from "../lib/makima";
 import { z } from "zod";
 import { createHash } from "crypto";
 
+type YoutubeMetadata = {
+  url: string;
+  start: number;
+  title: string;
+  channel: string;
+  videoId: string;
+  duration: number;
+  description: string;
+};
+
 export const generateInpirationalMessage = schemaTask({
   id: "inspire-student",
   retry: {
@@ -298,16 +308,6 @@ export const generateResourceRecommendations = schemaTask({
   run: async (payload, { ctx }) => {
     logger.log("Payload", { payload, ctx });
 
-    type YoutubeMetadata = {
-      url: string;
-      start: number;
-      title: string;
-      channel: string;
-      videoId: string;
-      duration: number;
-      description: string;
-    };
-
     const [
       resourcesBasedOnJobRoles,
       resourcesBasedOnProjects,
@@ -585,6 +585,112 @@ export const generateStudentPrepPack = schemaTask({
     logger.log("All tasks completed", final);
 
     return final;
+  },
+});
+
+export const generateInterviewPrepQuestionsPerJobDesc = schemaTask({
+  id: "generate-interview-prep-per-jd",
+  retry: {
+    maxAttempts: 10,
+    factor: 1.5,
+    randomize: true,
+  },
+  schema: z.object({
+    job: z.object({
+      details: z.any(),
+    }),
+    aspiring_job_roles: z.array(z.string()),
+    projects_done: z.array(z.unknown()),
+    education_experiences: z.array(z.unknown()),
+    certifications: z.array(z.unknown()),
+  }),
+  run: async (payload) => {
+    logger.log("Payload", { payload });
+    const studentDetails = {
+      jobsRolesStudentAspires: payload.aspiring_job_roles,
+      projectsDoneByStudent: payload.projects_done,
+      educationExperiences: payload.education_experiences,
+      certifications: payload.certifications,
+    };
+    const res = await chat({
+      agent: "interview-coach",
+      content: `Hey need help generating some project ideas for a student.
+
+Here are some of the details of the student's profile:
+${JSON.stringify(studentDetails, null, 2)}
+
+The job details that the student trying to apply to:
+${JSON.stringify(payload.job.details, null, 2)}
+
+Based on the details of the provided student profile/resume help generate some interview prep questions that the student can prepare for.
+You can also add suggestions on what the student can do and update their profile to be better suited for the job.
+
+The response must be in the following json format:
+\`\`\`
+{
+  questions: {
+    question: string;
+    answers: [string, string, string];
+  }[];
+  suggestions?: string[];
+}
+\`\`\`
+`,
+      name: "mentor",
+    });
+
+    logger.log("Raw response", { res });
+
+    // validate the response;
+
+    const responseSchema = z.object({
+      questions: z.array(
+        z.object({
+          question: z.string(),
+          answers: z.array(z.string()),
+        }),
+      ),
+      suggestions: z.array(z.string()).optional(),
+    });
+
+    const jsonParsed = JSON.parse(res);
+
+    const parsedOutput = responseSchema.parse(jsonParsed);
+
+    const modelSuggestions = parsedOutput;
+
+    let resouceSuggestions: YoutubeMetadata[] = [];
+
+    // fetch related resources for the student based on the job description
+    try {
+      const relatedResources = await searchKnowledgeBase<YoutubeMetadata>({
+        name: "youtube-videos",
+        query: JSON.stringify(payload.job.details),
+        k: 5,
+      });
+
+      const duplicateFilteredResources = relatedResources.filter(
+        (resource, index, self) => {
+          const indexInSelf = self.findIndex(
+            (r) => r.metadata.url === resource.metadata.url,
+          );
+          return index === indexInSelf;
+        },
+      );
+
+      if (!duplicateFilteredResources.length) {
+        throw new Error("No resources found for the job description");
+      }
+
+      resouceSuggestions = duplicateFilteredResources.map((r) => r.metadata);
+    } catch (error) {
+      logger.error("Error fetching resources", { error });
+    }
+
+    return {
+      modelSuggestions,
+      resouceSuggestions,
+    };
   },
 });
 
