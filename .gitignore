@@ -177,3 +177,5 @@ dist
 .DS_Store
 
 .trigger
+
+package-lock.json

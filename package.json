@@ -3,13 +3,15 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "dev": "npx trigger.dev@latest dev"
   },
   "dependencies": {
-    "@trigger.dev/sdk": "^3.3.5",
+    "@trigger.dev/sdk": "3.3.6",
     "makima-ts": "1.0.0-alpha.4",
     "youtube-transcript": "^1.2.1",
     "youtubei": "^1.6.7",
+    "zeptomail": "^6.1.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
