@@ -24,8 +24,9 @@ export const applyJobAndSendEmail = schemaTask({
 
       // Initialize ZeptoMail client
       const sendMailClient = new SendMailClient({
-        token: "Zoho-enczapikey PHtE6r0LEeq/izEq8xZU5/PtFcCnZN56/b9gfgJH4t0UCqdXFk0B/4x+xzCzrh8qUvBLR/PIwd08ubObs7+GJmfuZD0dX2qyqK3sx/VYSPOZsbq6x00ZsF8ZcEzdUofvcNJj0SzVs93YNA==", // Replace with your ZeptoMail API key
-        url: "https://api.zeptomail.in/",
+        token: process.env.ZEPTOMAIL_API_KEY, 
+        url: process.env.ZEPTOMAIL_URL,
+        
       });
 
       // Send email with the expected payload format
@@ -92,8 +93,8 @@ export const sendDecisionMail = schemaTask({
 
       // Initialize ZeptoMail client
       const sendMailClient = new SendMailClient({
-        token: "Zoho-enczapikey PHtE6r0LEeq/izEq8xZU5/PtFcCnZN56/b9gfgJH4t0UCqdXFk0B/4x+xzCzrh8qUvBLR/PIwd08ubObs7+GJmfuZD0dX2qyqK3sx/VYSPOZsbq6x00ZsF8ZcEzdUofvcNJj0SzVs93YNA==", // Replace with your ZeptoMail API key
-        url: "https://api.zeptomail.in/", 
+        token: process.env.ZEPTOMAIL_API_KEY,
+        url:process.env.ZEPTOMAIL_URL, 
       });
 
       
@@ -192,8 +193,8 @@ export const sendJobEmail = schemaTask({
 
       // Initialize ZeptoMail client
       const sendMailClient = new SendMailClient({
-        token: "Zoho-enczapikey PHtE6r0LEeq/izEq8xZU5/PtFcCnZN56/b9gfgJH4t0UCqdXFk0B/4x+xzCzrh8qUvBLR/PIwd08ubObs7+GJmfuZD0dX2qyqK3sx/VYSPOZsbq6x00ZsF8ZcEzdUofvcNJj0SzVs93YNA==", // Replace with your ZeptoMail API key
-        url: "https://api.zeptomail.in/",     // ZeptoMail base URL
+        token: process.env.ZEPTOMAIL_API_KEY, 
+        url: process.env.ZEPTOMAIL_URL,
       });
 
       // Send email with the payload
