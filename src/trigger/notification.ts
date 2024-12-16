@@ -24,16 +24,16 @@ export const applyJobAndSendEmail = schemaTask({
 
       // Initialize ZeptoMail client
       const sendMailClient = new SendMailClient({
-        token: "Zoho-enczapikey PHtE6r0FFuzo2GYmoxYHtPW4FM/1ZIou++M2JQdA4o5HDPVWHk0B+NwjlzLirEoiBPZGEKWam4xptr2Zsu6EIGntNjlNWWqyqK3sx/VYSPOZsbq6x00YuF4fcEHbVYbqdNJs1SbestrcNA==", // Replace with your ZeptoMail API key
+        token: "Zoho-enczapikey PHtE6r0LEeq/izEq8xZU5/PtFcCnZN56/b9gfgJH4t0UCqdXFk0B/4x+xzCzrh8qUvBLR/PIwd08ubObs7+GJmfuZD0dX2qyqK3sx/VYSPOZsbq6x00ZsF8ZcEzdUofvcNJj0SzVs93YNA==", // Replace with your ZeptoMail API key
         url: "https://api.zeptomail.in/",
       });
 
       // Send email with the expected payload format
       await sendMailClient.sendMailWithTemplate({
-        template_key: "2518b.36edbe3ee4b948da.k1.d22bbcc0-b3bc-11ef-82db-525400b0b0f3.1939b83728c", // Replace with your template key
+        template_key: "2518b.1f3f9645fe91eda6.k1.338f67b0-bb87-11ef-aefe-52540038fbba.193ce91d1ab", // Replace with your template key
         template_alias: "jobapplication", // Replace with your template alias
         from: {
-          address: "no-reply@atriahub.com", 
+          address: "no-reply@xcelerator.co.in", 
           name: "Xcelerator", 
         },
         to: [
@@ -51,7 +51,7 @@ export const applyJobAndSendEmail = schemaTask({
         },
         reply_to: [
           {
-            address: "support@atriahub.com",
+            address: "support@xcelerator.co.in",
             name: "Support Team",
           },
         ],
@@ -92,14 +92,14 @@ export const sendDecisionMail = schemaTask({
 
       // Initialize ZeptoMail client
       const sendMailClient = new SendMailClient({
-        token: "Zoho-enczapikey PHtE6r0FFuzo2GYmoxYHtPW4FM/1ZIou++M2JQdA4o5HDPVWHk0B+NwjlzLirEoiBPZGEKWam4xptr2Zsu6EIGntNjlNWWqyqK3sx/VYSPOZsbq6x00YuF4fcEHbVYbqdNJs1SbestrcNA==", // Replace with your ZeptoMail API key
+        token: "Zoho-enczapikey PHtE6r0LEeq/izEq8xZU5/PtFcCnZN56/b9gfgJH4t0UCqdXFk0B/4x+xzCzrh8qUvBLR/PIwd08ubObs7+GJmfuZD0dX2qyqK3sx/VYSPOZsbq6x00ZsF8ZcEzdUofvcNJj0SzVs93YNA==", // Replace with your ZeptoMail API key
         url: "https://api.zeptomail.in/", 
       });
 
       
       const templateKey = decision === "accepted"
-        ? "2518b.36edbe3ee4b948da.k1.41c4dbd0-b7c7-11ef-aefe-52540038fbba.193b5feba0d" // Replace with your accepted decision template key
-        : "2518b.36edbe3ee4b948da.k1.21ff0a50-b858-11ef-8398-525400ab18e6.193b9b42f75"; // Replace with your rejected decision template key
+        ? "2518b.1f3f9645fe91eda6.k1.15977ad0-bb88-11ef-aefe-52540038fbba.193ce979afd" // Replace with your accepted decision template key
+        : "2518b.1f3f9645fe91eda6.k1.b05ad071-bb89-11ef-aefe-52540038fbba.193cea21ef4"; // Replace with your rejected decision template key
 
       const templateAlias = decision === "accepted"
         ? "applicationaccepted" // Replace with your accepted decision template alias
@@ -115,7 +115,7 @@ export const sendDecisionMail = schemaTask({
             job_title: jobTitle,                  
           }
         : {
-            feedback: feedback || "All the best!", 
+            feedback: feedback || "All the best for future!", 
             student_name: userName || "Candidate",  
             company_name: companyName,            
             job_title: jobTitle,                  
@@ -126,7 +126,7 @@ export const sendDecisionMail = schemaTask({
         template_key: templateKey,
         template_alias: templateAlias,
         from: {
-          address: "no-reply@atriahub.com", 
+          address: "no-reply@xcelerator.co.in", 
           name: "Xcelerator", 
         },
         to: [
@@ -140,7 +140,7 @@ export const sendDecisionMail = schemaTask({
         merge_info: mergeInfo, 
         reply_to: [
           {
-            address: "support@atriahub.com",
+            address: "support@xcelerator.co.in",
             name: "Support Team",
           },
         ],
@@ -192,16 +192,16 @@ export const sendJobEmail = schemaTask({
 
       // Initialize ZeptoMail client
       const sendMailClient = new SendMailClient({
-        token: "Zoho-enczapikey PHtE6r0FFuzo2GYmoxYHtPW4FM/1ZIou++M2JQdA4o5HDPVWHk0B+NwjlzLirEoiBPZGEKWam4xptr2Zsu6EIGntNjlNWWqyqK3sx/VYSPOZsbq6x00YuF4fcEHbVYbqdNJs1SbestrcNA==", // Replace with your ZeptoMail API key
+        token: "Zoho-enczapikey PHtE6r0LEeq/izEq8xZU5/PtFcCnZN56/b9gfgJH4t0UCqdXFk0B/4x+xzCzrh8qUvBLR/PIwd08ubObs7+GJmfuZD0dX2qyqK3sx/VYSPOZsbq6x00ZsF8ZcEzdUofvcNJj0SzVs93YNA==", // Replace with your ZeptoMail API key
         url: "https://api.zeptomail.in/",     // ZeptoMail base URL
       });
 
       // Send email with the payload
       await sendMailClient.sendMailWithTemplate({
-        template_key: "2518b.36edbe3ee4b948da.k1.0ac2a320-b87f-11ef-8398-525400ab18e6.193bab32e52", // Replace with your template key
+        template_key: "2518b.1f3f9645fe91eda6.k1.ef858281-bb8a-11ef-aefe-52540038fbba.193ceaa4a9f", // Replace with your template key
         template_alias: "jobposting",      // Replace with your template alias
         from: {
-          address: "no-reply@atriahub.com", 
+          address: "no-reply@xcelerator.co.in", 
           name: "Xcelerator",             
         },
         to: [
@@ -224,7 +224,7 @@ export const sendJobEmail = schemaTask({
         },
         reply_to: [
           {
-            address: "support@atriahub.com", // Support email
+            address: "support@xcelerator.co.in", // Support email
             name: "Support Team",
           },
         ],
