@@ -5,7 +5,7 @@ import { SendMailClient } from "zeptomail";
 export const applyJobAndSendEmail = schemaTask({
   id: "apply-job-and-send-email",
   retry: {
-    maxAttempts: 3,
+    maxAttempts: 2,
     factor: 1.5,
     randomize: true,
   },
@@ -14,59 +14,98 @@ export const applyJobAndSendEmail = schemaTask({
     userName: z.string(),  
     jobTitle: z.string(),  
     companyName: z.string(), 
+    phoneNumber:z.string(),
+    // website:z.string(),
   }),
 
-  run: async (payload) => {
-    try {
+run: async (payload) => {
+  try {
+    const { userEmail, userName, jobTitle, companyName, phoneNumber } = payload;
 
-      // Extract data from the payload
-      const { userEmail, userName, jobTitle, companyName } = payload;
+    const sendMailClient = new SendMailClient({
+      token: process.env.ZEPTOMAIL_API_KEY,
+      url: process.env.ZEPTOMAIL_URL,
+    });
 
-      // Initialize ZeptoMail client
-      const sendMailClient = new SendMailClient({
-        token: process.env.ZEPTOMAIL_API_KEY, 
-        url: process.env.ZEPTOMAIL_URL,
+    await sendMailClient.sendMailWithTemplate({
+      template_key: "2518b.1f3f9645fe91eda6.k1.338f67b0-bb87-11ef-aefe-52540038fbba.193ce91d1ab",
+      template_alias: "jobapplication",
+      from: {
+        address: "no-reply@xcelerator.co.in",
+        name: "Xcelerator",
+      },
+      to: [
+        {
+          email_address: {
+            address: userEmail,
+            name: userName,
+          },
+        },
+      ],
+      merge_info: {
+        COMPANY: companyName,
+        name: userName,
+        job_title: jobTitle,
+      },
+      reply_to: [
+        {
+          address: "support@xcelerator.co.in",
+          name: "Support Team",
+        },
+      ],
+    });
+
+    logger.log("Email sent successfully via ZeptoMail");
+
+    // Send WhatsApp message
+    const watiBaseUrl = process.env.WATI_API_URL; 
+    const watiUrl = `${watiBaseUrl}/sendTemplateMessage`
+    const watiToken = process.env.WATI_API_KEY;
+    const queryParams = new URLSearchParams({
+      whatsappNumber: phoneNumber, // e.g., +919591142367
+    });
+    
+    const watiPayload = {
+      template_name: "job_application_notification",
+      broadcast_name: "job_application_notification_171220241949 ",
+      parameters: [
+        { name: "name", value: userName },
+        {name:"job_title",value:jobTitle},
+        {name:"company", value:companyName},
+        {name:"navigate", value:"listing"}
         
-      });
+      ],
+      
+    };
+    console.log(watiPayload)
 
-      // Send email with the expected payload format
-      await sendMailClient.sendMailWithTemplate({
-        template_key: "2518b.1f3f9645fe91eda6.k1.338f67b0-bb87-11ef-aefe-52540038fbba.193ce91d1ab", // Replace with your template key
-        template_alias: "jobapplication", // Replace with your template alias
-        from: {
-          address: "no-reply@xcelerator.co.in", 
-          name: "Xcelerator", 
-        },
-        to: [
-          {
-            email_address: {
-              address: userEmail, 
-              name: userName,     
-            },
-          },
-        ],
-        merge_info: {
-          COMPANY: companyName, 
-          name: userName,       
-          job_title: jobTitle,  
-        },
-        reply_to: [
-          {
-            address: "support@xcelerator.co.in",
-            name: "Support Team",
-          },
-        ],
-      });
+    const watiResponse = await fetch(`${watiUrl}?${queryParams.toString()}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${watiToken}`,
+      },
+      body: JSON.stringify(watiPayload),
+    });
 
-      logger.log("Email sent successfully via ZeptoMail");
-      return { message: "Email sent successfully" };
-
-    } catch (error) {
-      logger.error("Error in applyJobAndSendEmail:");
-      throw error;
+    if (!watiResponse.ok) {
+      console.log("not okay")
+      const errorDetails = await watiResponse.json();
+      throw new Error(`WATI API Error: ${JSON.stringify(errorDetails)}`);
     }
-  },
+
+    logger.log("WhatsApp message sent successfully via WATI");
+
+    return { message: "Notifications sent successfully" };
+
+  } catch (error) {
+    logger.error("Error in applyJobAndSendEmail:");
+    throw error;
+  }
+},
 });
+
+//////////////////////////////////////////////////Sending Decision notification/////////////////////////////////////////////////////////////////
 
 export const sendDecisionMail = schemaTask({
   id: "send-decision-mail",
@@ -82,14 +121,15 @@ export const sendDecisionMail = schemaTask({
     companyName: z.string(),     
     decision: z.string(),       
     stageTitle: z.string().optional(), 
-    feedback: z.string().optional(),  
+    feedback: z.string().optional(),
+    phoneNumber:z.string(),  
   }),
 
   run: async (payload) => {
     try {
   
       logger.log("Received Payload:", { payload });
-      const { userEmail, userName, jobTitle, companyName, decision, stageTitle, feedback } = payload;
+      const { userEmail, userName, jobTitle, companyName, decision, stageTitle, feedback,phoneNumber } = payload;
 
       // Initialize ZeptoMail client
       const sendMailClient = new SendMailClient({
@@ -148,6 +188,55 @@ export const sendDecisionMail = schemaTask({
       });
 
       logger.log("Email sent successfully via ZeptoMail");
+      //watsapp message
+      const watiUrl = process.env.WATI_API_URL;
+      const watiTemplateName = decision === "accepted" ? "application_accepted" : "application_rejected";
+      const watiPayload = decision === "accepted"
+        ? {
+            template_name: watiTemplateName,
+            broadcast_name: watiTemplateName,
+            parameters: [
+              { name: "student_name", value: userName },
+              { name: "company_name", value: companyName },
+              { name: "job_title", value: jobTitle },
+              { name: "stage", value: stageTitle || "Next round" },
+              { name: "navigate", value: "listing" },
+            ],
+          }
+        : {
+            template_name: watiTemplateName,
+            broadcast_name: watiTemplateName,
+            parameters: [
+              { name: "student_name", value: userName },
+              { name: "company_name", value: companyName },
+              { name: "job_title", value: jobTitle },
+              { name: "navigate", value: "jobs" },
+            ],
+          };
+
+      const queryParams = new URLSearchParams({
+        whatsappNumber: phoneNumber,
+      });
+
+      const watiResponse = await fetch(`${watiUrl}/sendTemplateMessage?${queryParams.toString()}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json-patch+json",
+          Authorization: `Bearer ${process.env.WATI_API_KEY}`,
+        },
+        body: JSON.stringify(watiPayload),
+      });
+
+      const watiResponseText = await watiResponse.text();
+      const watiResponseBody = watiResponseText ? JSON.parse(watiResponseText) : null;
+
+      if (!watiResponse.ok) {
+        logger.error("Failed to send WhatsApp message via WATI:", watiResponseBody || watiResponseText);
+        throw new Error(`WATI API Error: ${watiResponse.statusText}`);
+      }
+
+      logger.log("WhatsApp message sent successfully via WATI:", watiResponseBody);
+
       return { message: "Email sent successfully" };
 
     } catch (error) {
@@ -157,6 +246,7 @@ export const sendDecisionMail = schemaTask({
   },
 });
 
+/////////////////////////////////////////////////////////send job notification////////////////////////////////////////////////////////
 export const sendJobEmail = schemaTask({
   id: "send-job-email-facilitator",
   retry: {
