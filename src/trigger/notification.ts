@@ -11,16 +11,16 @@ export const applyJobAndSendEmail = schemaTask({
     randomize: true,
   },
   schema: z.object({
-    userEmail: z.string(),
-    userName: z.string(),
-    jobTitle: z.string(),
-    companyName: z.string(),
-    phoneNumber: z.string(),
+    user_email: z.string(),
+    user_name: z.string(),
+    job_title: z.string(),
+    company_name: z.string(),
+    phone_number: z.string(),
     // website:z.string(),
   }),
 
 run: async (payload) => {
-    const { userEmail, userName, jobTitle, companyName, phoneNumber } = payload;
+    const { user_email, user_name, job_title, company_name, phone_number } = payload;
 
     const sendMailClient = new SendMailClient({
       token: process.env.ZEPTOMAIL_API_KEY,
@@ -37,15 +37,15 @@ run: async (payload) => {
       to: [
         {
           email_address: {
-            address: userEmail,
-            name: userName,
+            address: user_email,
+            name: user_name,
           },
         },
       ],
       merge_info: {
-        COMPANY: companyName,
-        name: userName,
-        job_title: jobTitle,
+        COMPANY: company_name,
+        name: user_name,
+        job_title: job_title,
       },
       reply_to: [
         {
@@ -61,15 +61,15 @@ run: async (payload) => {
     const watiUrl = `${watiBaseUrl}/sendTemplateMessage`;
     const watiToken = process.env.WATI_API_KEY;
     const queryParams = new URLSearchParams({
-      whatsappNumber: phoneNumber,
+      whatsappNumber: phone_number,
     });
     const watiPayload = {
       template_name: "job_application_notification",
       broadcast_name: "job_application_notification_171220241949",
       parameters: [
-        { name: "name", value: userName },
-        {name:"job_title",value:jobTitle},
-        {name:"company", value:companyName},
+        { name: "name", value: user_name },
+        {name:"job_title",value:job_title},
+        {name:"company", value:company_name},
         {name:"navigate", value:"listing"}
       ],
     };
@@ -107,19 +107,19 @@ export const sendDecisionMail = schemaTask({
     randomize: true,
   },
   schema: z.object({
-    userEmail: z.string(),      
-    userName: z.string(),        
-    jobTitle: z.string(),       
-    companyName: z.string(),     
+    user_email: z.string(),      
+    user_name: z.string(),        
+    job_title: z.string(),       
+    company_name: z.string(),     
     decision: z.string(),       
-    stageTitle: z.string().optional(), 
+    stage_title: z.string().optional(), 
     feedback: z.string().optional(),
-    phoneNumber:z.string(),  
+    phone_number:z.string(),  
   }),
 
   run: async (payload) => {
     logger.log("Received Payload:", { payload });
-    const { userEmail, userName, jobTitle, companyName, decision, stageTitle, feedback, phoneNumber } = payload;
+    const { user_email, user_name, job_title, company_name, decision, stage_title, feedback, phone_number } = payload;
 
     // Initialize ZeptoMail client
     const sendMailClient = new SendMailClient({
@@ -128,27 +128,27 @@ export const sendDecisionMail = schemaTask({
     });
 
     const templateKey =
-      decision === "accepted"
+    decision === "accepted"
         ? "2518b.1f3f9645fe91eda6.k1.15977ad0-bb88-11ef-aefe-52540038fbba.193ce979afd"
         : "2518b.1f3f9645fe91eda6.k1.b05ad071-bb89-11ef-aefe-52540038fbba.193cea21ef4";
 
     const templateAlias =
-      decision === "accepted" ? "applicationaccepted" : "applicationrejected";
+    decision === "accepted" ? "applicationaccepted" : "applicationrejected";
 
     const mergeInfo =
-      decision === "accepted"
+    decision === "accepted"
         ? {
             feedback: feedback || "All the best!",
-            student_name: userName || "Candidate",
-            stage: stageTitle || "Next round",
-            company_name: companyName,
-            job_title: jobTitle,
+            student_name: user_name || "Candidate",
+            stage: stage_title || "Next round",
+            company_name: company_name,
+            job_title: job_title,
           }
         : {
             feedback: feedback || "All the best for future!",
-            student_name: userName || "Candidate",
-            company_name: companyName,
-            job_title: jobTitle,
+            student_name: user_name || "Candidate",
+            company_name: company_name,
+            job_title: job_title,
           };
 
     // Send email with the selected template
@@ -162,8 +162,8 @@ export const sendDecisionMail = schemaTask({
       to: [
         {
           email_address: {
-            address: userEmail,
-            name: userName,
+            address: user_email,
+            name: user_name,
           },
         },
       ],
@@ -183,15 +183,15 @@ export const sendDecisionMail = schemaTask({
     const watiTemplateName = decision === "accepted" ? "application_accepted" : "application_rejected";
 
     const watiPayload =
-      decision === "accepted"
+    decision === "accepted"
         ? {
             template_name: watiTemplateName,
             broadcast_name: watiTemplateName,
             parameters: [
-              { name: "student_name", value: userName },
-              { name: "company_name", value: companyName },
-              { name: "job_title", value: jobTitle },
-              { name: "stage", value: stageTitle || "Next round" },
+              { name: "student_name", value: user_name },
+              { name: "company_name", value: company_name },
+              { name: "job_title", value: job_title },
+              { name: "stage", value: stage_title|| "Next round" },
               { name: "navigate", value: "listing" },
             ],
           }
@@ -199,15 +199,15 @@ export const sendDecisionMail = schemaTask({
             template_name: watiTemplateName,
             broadcast_name: watiTemplateName,
             parameters: [
-              { name: "student_name", value: userName },
-              { name: "company_name", value: companyName },
-              { name: "job_title", value: jobTitle },
+              { name: "student_name", value: user_name },
+              { name: "company_name", value: company_name },
+              { name: "job_title", value: job_title },
               { name: "navigate", value: "jobs" },
             ],
           };
 
     const queryParams = new URLSearchParams({
-      whatsappNumber: phoneNumber,
+      whatsappNumber: phone_number,
     });
 
     const watiResponse = await fetch(`${watiUrl}/sendTemplateMessage?${queryParams.toString()}`, {
