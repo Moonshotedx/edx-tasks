@@ -234,6 +234,7 @@ export const sendDecisionMail = schemaTask({
 });
 
 /////////////////////////////////////////////////////////send job notification////////////////////////////////////////////////////////
+
 export const sendJobEmail = schemaTask({
   id: "send-job-email-facilitator",
   retry: {
@@ -251,6 +252,9 @@ export const sendJobEmail = schemaTask({
     job_title: z.string(),          
     job_location: z.string(),       
     institute_email: z.string().email(),
+    send_whatsapp:z.boolean(),
+    send_email:z.boolean(),
+    phone_number:z.string(),
   }),
 
   run: async (payload) => {
@@ -264,6 +268,9 @@ export const sendJobEmail = schemaTask({
       job_title,
       job_location,
       institute_email,
+      send_email,
+      send_whatsapp,
+      phone_number,
     } = payload;
 
     // Initialize ZeptoMail client
@@ -272,41 +279,89 @@ export const sendJobEmail = schemaTask({
       url: process.env.ZEPTOMAIL_URL,
     });
 
-    // Send email with the payload
-    await sendMailClient.sendMailWithTemplate({
-      template_key: "2518b.1f3f9645fe91eda6.k1.ef858281-bb8a-11ef-aefe-52540038fbba.193ceaa4a9f", // Replace with your template key
-      template_alias: "jobposting",      // Replace with your template alias
-      from: {
-        address: "no-reply@xcelerator.co.in", 
-        name: "Xcelerator",             
-      },
-      to: [
-        {
-          email_address: {
-            address: institute_email,  
-            name: institute_name,      
+    // Send email only if send_email is true
+    if (send_email) {
+      console.log("Preparing to send email...");
+      await sendMailClient.sendMailWithTemplate({
+        template_key: "2518b.1f3f9645fe91eda6.k1.ef858281-bb8a-11ef-aefe-52540038fbba.193ceaa4a9f", // Replace with your template key
+        template_alias: "jobposting",      // Replace with your template alias
+        from: {
+          address: "no-reply@xcelerator.co.in", 
+          name: "Xcelerator",             
+        },
+        to: [
+          {
+            email_address: {
+              address: institute_email,  
+              name: institute_name,      
+            },
           },
+        ],
+        merge_info: {
+          job_type,            
+          website,            
+          company_name,        
+          application_deadline, 
+          salary,              
+          institute_name,      
+          job_title,         
+          job_location,       
         },
-      ],
-      merge_info: {
-        job_type,            
-        website,            
-        company_name,        
-        application_deadline, 
-        salary,              
-        institute_name,      
-        job_title,         
-        job_location,       
-      },
-      reply_to: [
-        {
-          address: "support@xcelerator.co.in", // Support email
-          name: "Support Team",
-        },
-      ],
-    });
+        reply_to: [
+          {
+            address: "support@xcelerator.co.in", // Support email
+            name: "Support Team",
+          },
+        ],
+      });
 
-    console.log("Email sent successfully via ZeptoMail");
-    return { message: "Email sent successfully" };
+      console.log("Email sent successfully via ZeptoMail");
+    }
+    if (send_whatsapp) {
+      console.log("Preparing to send WhatsApp message...");
+      
+      const watiBaseUrl = process.env.WATI_API_URL; 
+      const watiUrl = `${watiBaseUrl}/sendTemplateMessage`;
+      const watiToken = process.env.WATI_API_KEY;
+      const queryParams = new URLSearchParams({
+        whatsappNumber: phone_number,
+      });
+      const watiPayload = {
+        template_name: "job_updates", 
+        broadcast_name: "job_updates",
+        parameters: [
+          { name: "job_type", value: job_type },
+          { name: "website", value: website },
+          { name: "company_name", value: company_name },
+          { name: "application_deadline", value: application_deadline },
+          { name: "salary", value: salary },
+          { name: "institute_name", value: institute_name },
+          { name: "job_title", value: job_title },
+          { name: "job_location", value: job_location },
+          {name:"navigate", value:"listing"},
+        ],
+      };
+
+      console.log("WhatsApp Payload:", watiPayload);
+
+      const watiResponse = await fetch(`${watiUrl}?${queryParams.toString()}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${watiToken}`,
+        },
+        body: JSON.stringify(watiPayload),
+      });
+
+      if (!watiResponse.ok) {
+        console.log("WhatsApp message sending failed.");
+        const errorDetails = await watiResponse.json();
+        throw new Error(`WATI API Error: ${JSON.stringify(errorDetails)}`);
+      }
+
+      console.log("WhatsApp message sent successfully via WATI.");
+    }
+
+    return { message: "Notifications sent successfully" };
   },
 });
