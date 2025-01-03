@@ -1,6 +1,96 @@
 import { logger, schemaTask } from "@trigger.dev/sdk/v3";
 import { chat } from "../lib/makima";
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
+
+// Define the schema
+const jobDescriptionSchema = z.object({
+  organisation: z.object({
+    value: z.string().optional(), // Organisation ID
+    label: z.string().optional(), // Organisation name
+  }),
+  title: z.string().optional(),
+  description: z.array(
+    z.object({
+      id: z.string().optional(),
+      type: z.literal("paragraph"),
+      props: z.object({
+        textColor: z.literal("default"),
+        backgroundColor: z.literal("default"),
+        textAlignment: z.literal("left"),
+      }),
+      content: z.array(
+        z.object({
+          type: z.literal("text"),
+          text: z.string(),
+          styles: z.object({}).optional(),
+        })
+      ),
+      children: z.array(z.unknown()),
+    })
+  ),
+  job_type: z.enum(["full-time", "part-time", "internship"]),
+  requirements: z.string().optional(),
+  application_deadline: z
+    .string()
+    .refine((date) => !isNaN(Date.parse(date)), {
+      message:
+        "Invalid date format, must be in ISO format: YYYY-MM-DDTHH:mm:ss.sssZ",
+    }),
+  meta_data: z.object({
+    experience: z.string().optional(),
+    faqs: z.array(
+      z.object({
+        order: z.number(),
+        question: z.string(),
+        answer: z.string(),
+      })
+    ),
+    skills: z.array(
+      z.object({
+        order: z.number(),
+        value: z.string(),
+      })
+    ),
+    stages: z.array(
+      z.object({
+        order: z.number(),
+        title: z.string(),
+        description: z.string(),
+        tips: z.string(),
+        status: z.string(),
+        duration: z.string(),
+        resources: z.array(z.unknown()),
+      })
+    ),
+    resources: z.array(
+      z.object({
+        order: z.number(),
+        title: z.string(),
+        description: z.string(),
+        url: z.string(),
+        type: z.string(),
+      })
+    ),
+    start_date: z.object({
+      type: z.enum(["Immediate", "Future"]),
+    }),
+    compensation: z.object({
+      type: z.enum(["paid", "unpaid"]),
+      frequency: z.enum(["yearly", "monthly"]),
+      salary_type: z.literal("fixed"),
+      fixed_salary: z.number(),
+      salary_range: z.object({
+        min: z.number(),
+        max: z.number(),
+      }),
+    }),
+  }),
+});
+
+// Convert schema to JSON Schema
+const jobDescriptionJsonSchema = zodToJsonSchema(jobDescriptionSchema);
+const schemaString = JSON.stringify(jobDescriptionJsonSchema, null, 2); 
 
 export const parseJobDescription = schemaTask({
   id: "job-description-parser",
@@ -10,7 +100,7 @@ export const parseJobDescription = schemaTask({
     randomize: true,
   },
   schema: z.object({
-    job_description: z.string(), // Input: Raw job description as a string
+    job_description: z.string(), // giving raw job description 
   }),
 
   run: async (payload, { ctx }) => {
@@ -18,247 +108,25 @@ export const parseJobDescription = schemaTask({
       job_description: payload.job_description,
     });
 
-    // Use an LLM to parse the raw job description into structured data
+    // use the schema in the prompt
     const res = await chat({
       agent: "job-description-parser",
-      content: `Parse the following job description and convert it into the structured format. Remember the organisation key should populate the organisation value and label of the target organisation which recruiter is trying to post the job to:
-Job Description: ${payload.job_description}
-
-Return the response in the following JSON format, ensuring all keys are included (use empty values if no data is found):
-{
-  {
-  "type": "object",
-  "properties": {
-    "organisation": {
-      "type": "object",
-      "properties": {
-        "value": { "type": "string" },
-        "label": { "type": "string" }
-      },
-      "required": ["value", "label"]
-    },
-    "title": { "type": "string" },
-    "description": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "type": { "type": "string", "enum": ["paragraph"] },
-          "props": {
-            "type": "object",
-            "properties": {
-              "textColor": { "type": "string", "enum": ["default"] },
-              "backgroundColor": { "type": "string", "enum": ["default"] },
-              "textAlignment": { "type": "string", "enum": ["left"] }
-            },
-            "required": ["textColor", "backgroundColor", "textAlignment"]
-          },
-          "content": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "type": { "type": "string", "enum": ["text"] },
-                "text": { "type": "string" },
-                "styles": { "type": "object" }
-              },
-              "required": ["type", "text"]
-            }
-          },
-          "children": { "type": "array", "items": {} }
-        },
-        "required": ["id", "type", "props", "content"]
-      }
-    },
-    "job_type": { "type": "string", "enum": ["full-time", "part-time", "internship"] },
-    "requirements": { "type": "string" },
-    "application_deadline": { "type": "string", "format": "date-time" },
-    "meta_data": {
-      "type": "object",
-      "properties": {
-        "experience": { "type": "string" },
-        "faqs": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "order": { "type": "integer" },
-              "question": { "type": "string" },
-              "answer": { "type": "string" }
-            },
-            "required": ["order", "question", "answer"]
-          }
-        },
-        "skills": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "order": { "type": "integer" },
-              "value": { "type": "string" }
-            },
-            "required": ["order", "value"]
-          }
-        },
-        "stages": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "order": { "type": "integer" },
-              "title": { "type": "string" },
-              "description": { "type": "string" },
-              "tips": { "type": "string" },
-              "status": { "type": "string" },
-              "duration": { "type": "string" },
-              "resources": {
-                "type": "array",
-                "items": { "type": "string" }
-              }
-            },
-            "required": ["order", "title", "description", "tips", "status", "duration", "resources"]
-          }
-        },
-        "resources": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "order": { "type": "integer" },
-              "title": { "type": "string" },
-              "description": { "type": "string" },
-              "url": { "type": "string" },
-              "type": { "type": "string" }
-            },
-            "required": ["order", "title", "description", "url", "type"]
-          }
-        },
-        "start_date": {
-          "type": "object",
-          "properties": {
-            "type": { "type": "string", "enum": ["Immediate", "Future"] }
-          },
-          "required": ["type"]
-        },
-        "compensation": {
-          "type": "object",
-          "properties": {
-            "type": { "type": "string", "enum": ["paid", "unpaid"] },
-            "frequency": { "type": "string", "enum": ["yearly", "monthly"] },
-            "salary_type": { "type": "string", "default": "fixed", "enum": ["fixed"] },
-            "fixed_salary": { "type": "integer", "default": 0 },
-            "salary_range": {
-              "type": "object",
-              "properties": {
-                "min": { "type": "integer" },
-                "max": { "type": "integer" }
-              },
-              "required": ["min", "max"]
-            }
-          },
-          "required": ["type", "frequency", "salary_type", "fixed_salary", "salary_range"]
-        }
-      },
-      "required": ["experience", "faqs", "skills", "stages", "resources", "start_date", "compensation"]
-    },
-    
-  },
-  "required": ["organisation", "title", "description", "job_type", "requirements", "application_deadline", "meta_data"]
-}`,
+      content: `Parse the following job description and convert it into the structured format. Use the JSON schema below to ensure the response adheres to the expected structure, Ensure that "application_deadline" is in ISO 8601 format (e.g., "2025-01-11T06:59:37.000Z").
+:
+      
+      JSON Schema:
+      ${schemaString}
+      
+      Job Description: ${payload.job_description}
+      `,
     });
 
     logger.log("LLM response", { response: res });
-    // Define the schema for validation
-    const schema = z.object({
-      organisation: z.object({
-        value: z.string().optional(), // Organisation ID
-        label: z.string().optional(), // Organisation name
-      }),
-      title: z.string().optional(),
-      description: z.array(
-        z.object({
-          id: z.string().optional(),
-          type: z.literal("paragraph"),
-          props: z.object({
-            textColor: z.literal("default"),
-            backgroundColor: z.literal("default"),
-            textAlignment: z.literal("left"),
-          }),
-          content: z.array(
-            z.object({
-              type: z.literal("text"),
-              text: z.string(),
-              styles: z.object({}).optional(),
-            })
-          ),
-          children: z.array(z.unknown()),
-        })
-      ),
-      job_type: z.enum(["full-time", "part-time", "internship"]),
-      requirements: z.string().optional(),
-      application_deadline: z
-        .string()
-        .refine((date) => !isNaN(Date.parse(date)), {
-          message:
-            "Invalid date format, must be in ISO format: YYYY-MM-DDTHH:mm:ssZ",
-        }),
-      meta_data: z.object({
-        experience: z.string().optional(),
-        faqs: z.array(
-          z.object({
-            order: z.number(),
-            question: z.string(),
-            answer: z.string(),
-          })
-        ),
-        skills: z.array(
-          z.object({
-            order: z.number(),
-            value: z.string(),
-          })
-        ),
-        stages: z.array(
-          z.object({
-            order: z.number(),
-            title: z.string(),
-            description: z.string(),
-            tips: z.string(),
-            status: z.string(),
-            duration: z.string(),
-            resources: z.array(z.unknown()),
-          })
-        ),
-        resources: z.array(
-          z.object({
-            order: z.number(),
-            title: z.string(),
-            description: z.string(),
-            url: z.string(),
-            type: z.string(),
-          })
-        ),
-        start_date: z.object({
-          type: z.enum(["Immediate", "Future"]),
-        }),
-        compensation: z.object({
-          type: z.enum(["paid", "unpaid"]),
-          frequency: z.enum(["yearly", "monthly"]),
-          salary_type: z.literal("fixed"),
-          fixed_salary: z.number(),
-          salary_range: z.object({
-            min: z.number(),
-            max: z.number(),
-          }),
-        }),
-      }),
-      
-    });
 
     // Parse and validate the response
     const parsedResponse = JSON.parse(res);
     try {
-      schema.parse(parsedResponse);
+      jobDescriptionSchema.parse(parsedResponse);
       logger.log("Validated response successfully", {
         validatedResponse: parsedResponse,
       });
