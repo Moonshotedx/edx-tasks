@@ -1,9 +1,6 @@
 {
   "compilerOptions": {
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
+    "lib": ["ESNext", "DOM"],
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "node", // Use Node.js module resolution
@@ -16,11 +13,6 @@
     "esModuleInterop": true, // For compatibility with CommonJS modules
     "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    "src"
-  ], // Include source files
-  "exclude": [
-    "node_modules",
-    "dist"
-  ] // Exclude build artifacts
+  "include": ["src"], // Include source files
+  "exclude": ["node_modules", "dist"] // Exclude build artifacts
 }

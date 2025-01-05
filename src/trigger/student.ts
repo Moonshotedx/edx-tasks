@@ -1,17 +1,18 @@
-import { idempotencyKeys, logger, runs, schemaTask } from "@trigger.dev/sdk/v3";
-import { chat, searchKnowledgeBase } from "../lib/makima";
-import { z } from "zod";
-import { createHash } from "crypto";
+import { createHash } from "crypto"
+import { idempotencyKeys, logger, runs, schemaTask } from "@trigger.dev/sdk/v3"
+import { z } from "zod"
+
+import { chat, searchKnowledgeBase } from "../lib/makima"
 
 type YoutubeMetadata = {
-  url: string;
-  start: number;
-  title: string;
-  channel: string;
-  videoId: string;
-  duration: number;
-  description: string;
-};
+  url: string
+  start: number
+  title: string
+  channel: string
+  videoId: string
+  duration: number
+  description: string
+}
 
 export const generateInpirationalMessage = schemaTask({
   id: "inspire-student",
@@ -30,7 +31,7 @@ export const generateInpirationalMessage = schemaTask({
   }),
 
   run: async (payload, { ctx }) => {
-    logger.log("Payload", { payload, ctx });
+    logger.log("Payload", { payload, ctx })
     const res = await chat({
       agent: "interview-coach",
       content: `Hey need help generating some one liner instpirational messages for ${payload.name}.
@@ -51,22 +52,22 @@ The response must be in the following json format:
 \`\`\`
 `,
       name: "mentor",
-    });
+    })
 
-    logger.log("Raw response", { res });
+    logger.log("Raw response", { res })
 
     // validate the response;
     const responseSchema = z.object({
       message: z.string(),
-    });
+    })
 
-    const jsonParsed = JSON.parse(res);
+    const jsonParsed = JSON.parse(res)
 
-    const parsedOutput = responseSchema.parse(jsonParsed);
+    const parsedOutput = responseSchema.parse(jsonParsed)
 
-    return parsedOutput;
+    return parsedOutput
   },
-});
+})
 
 export const generateCareerProgress = schemaTask({
   id: "get-career-progress",
@@ -85,7 +86,7 @@ export const generateCareerProgress = schemaTask({
   }),
 
   run: async (payload, { ctx }) => {
-    logger.log("Payload", { payload, ctx });
+    logger.log("Payload", { payload, ctx })
     const res = await chat({
       agent: "interview-coach",
       content: `Hey need help generating the current career progress for ${payload.name}.
@@ -107,9 +108,9 @@ The response must be in the following json format:
 \`\`\`
 `,
       name: "mentor",
-    });
+    })
 
-    logger.log("Raw response", { res });
+    logger.log("Raw response", { res })
 
     // validate the response;
     const responseSchema = z.object({
@@ -118,17 +119,17 @@ The response must be in the following json format:
           role: z.string(),
           progress: z.number(),
           message: z.string(),
-        }),
+        })
       ),
-    });
+    })
 
-    const jsonParsed = JSON.parse(res);
+    const jsonParsed = JSON.parse(res)
 
-    const parsedOutput = responseSchema.parse(jsonParsed);
+    const parsedOutput = responseSchema.parse(jsonParsed)
 
-    return parsedOutput;
+    return parsedOutput
   },
-});
+})
 
 export const generateImprovementActionPlan = schemaTask({
   id: "generate-improvement-action-plan",
@@ -147,7 +148,7 @@ export const generateImprovementActionPlan = schemaTask({
   }),
 
   run: async (payload, { ctx }) => {
-    logger.log("Payload", { payload, ctx });
+    logger.log("Payload", { payload, ctx })
     const res = await chat({
       agent: "interview-coach",
       content: `Hey need help generating an improvement action plan for ${payload.name}.
@@ -188,9 +189,9 @@ The response must be in the following json format:
 NOTE: Subtitle in the above is gonna be shown under the respective key as a subtitle for that catagory of points.
 `,
       name: "mentor",
-    });
+    })
 
-    logger.log("Raw response", { res });
+    logger.log("Raw response", { res })
 
     // validate the response;
     const responseSchema = z.object({
@@ -218,15 +219,15 @@ NOTE: Subtitle in the above is gonna be shown under the respective key as a subt
           points: z.array(z.string()),
         })
         .optional(),
-    });
+    })
 
-    const jsonParsed = JSON.parse(res);
+    const jsonParsed = JSON.parse(res)
 
-    const parsedOutput = responseSchema.parse(jsonParsed);
+    const parsedOutput = responseSchema.parse(jsonParsed)
 
-    return parsedOutput;
+    return parsedOutput
   },
-});
+})
 
 export const generateRecommendedProjectIdeas = schemaTask({
   id: "generate-recommended-project-ideas",
@@ -245,7 +246,7 @@ export const generateRecommendedProjectIdeas = schemaTask({
   }),
 
   run: async (payload, { ctx }) => {
-    logger.log("Payload", { payload, ctx });
+    logger.log("Payload", { payload, ctx })
     const res = await chat({
       agent: "interview-coach",
       content: `Hey need help generating some project ideas for ${payload.name}.
@@ -266,9 +267,9 @@ The response must be in the following json format:
 \`\`\`
 `,
       name: "mentor",
-    });
+    })
 
-    logger.log("Raw response", { res });
+    logger.log("Raw response", { res })
 
     // validate the response;
     const responseSchema = z.object({
@@ -277,17 +278,17 @@ The response must be in the following json format:
           title: z.string(),
           description: z.string(),
           resources: z.array(z.string()).optional(),
-        }),
+        })
       ),
-    });
+    })
 
-    const jsonParsed = JSON.parse(res);
+    const jsonParsed = JSON.parse(res)
 
-    const parsedOutput = responseSchema.parse(jsonParsed);
+    const parsedOutput = responseSchema.parse(jsonParsed)
 
-    return parsedOutput;
+    return parsedOutput
   },
-});
+})
 
 export const generateResourceRecommendations = schemaTask({
   id: "generate-resource-recommendations",
@@ -306,7 +307,7 @@ export const generateResourceRecommendations = schemaTask({
   }),
 
   run: async (payload, { ctx }) => {
-    logger.log("Payload", { payload, ctx });
+    logger.log("Payload", { payload, ctx })
 
     const [
       resourcesBasedOnJobRoles,
@@ -320,12 +321,12 @@ export const generateResourceRecommendations = schemaTask({
             name: "youtube-videos",
             query: role,
             k: 1,
-          });
+          })
           if (res.length === 0) {
-            throw new Error(`No resources found for ${role}`);
+            throw new Error(`No resources found for ${role}`)
           }
-          return res?.[0];
-        }),
+          return res?.[0]
+        })
       ),
       Promise.allSettled(
         payload.projects_done.map(async (project) => {
@@ -333,12 +334,12 @@ export const generateResourceRecommendations = schemaTask({
             name: "youtube-videos",
             query: JSON.stringify(project),
             k: 1,
-          });
+          })
           if (res.length === 0) {
-            throw new Error(`No resources found for ${project}`);
+            throw new Error(`No resources found for ${project}`)
           }
-          return res?.[0];
-        }),
+          return res?.[0]
+        })
       ),
       Promise.allSettled(
         payload.education_experiences.map(async (education) => {
@@ -346,12 +347,12 @@ export const generateResourceRecommendations = schemaTask({
             name: "youtube-videos",
             query: JSON.stringify(education),
             k: 1,
-          });
+          })
           if (res.length === 0) {
-            throw new Error(`No resources found for ${education}`);
+            throw new Error(`No resources found for ${education}`)
           }
-          return res?.[0];
-        }),
+          return res?.[0]
+        })
       ),
       Promise.allSettled(
         payload.certifications.map(async (cert) => {
@@ -359,14 +360,14 @@ export const generateResourceRecommendations = schemaTask({
             name: "youtube-videos",
             query: JSON.stringify(cert),
             k: 1,
-          });
+          })
           if (res.length === 0) {
-            throw new Error(`No resources found for ${cert}`);
+            throw new Error(`No resources found for ${cert}`)
           }
-          return res?.[0];
-        }),
+          return res?.[0]
+        })
       ),
-    ]);
+    ])
 
     const resources = [
       ...resourcesBasedOnJobRoles
@@ -381,19 +382,19 @@ export const generateResourceRecommendations = schemaTask({
       ...resourcesBasedOnCertifications
         .filter((r) => r.status === "fulfilled")
         .map((r) => r.value),
-    ];
+    ]
 
     const duplicateFilteredResources = resources.filter(
       (resource, index, self) => {
         const indexInSelf = self.findIndex(
-          (r) => r.metadata.url === resource.metadata.url,
-        );
-        return index === indexInSelf;
-      },
-    );
-    return duplicateFilteredResources.map((r) => r.metadata);
+          (r) => r.metadata.url === resource.metadata.url
+        )
+        return index === indexInSelf
+      }
+    )
+    return duplicateFilteredResources.map((r) => r.metadata)
   },
-});
+})
 
 export const generateStudentPrepPack = schemaTask({
   id: "generate-student-prep-pack",
@@ -413,7 +414,7 @@ export const generateStudentPrepPack = schemaTask({
   }),
 
   run: async (payload) => {
-    logger.log("env", { env: process.env.NODE_ENV });
+    logger.log("env", { env: process.env.NODE_ENV })
 
     const keys = {
       inspirationalMessage: await idempotencyKeys.create(
@@ -422,7 +423,7 @@ export const generateStudentPrepPack = schemaTask({
           aspiring_job_roles: payload.aspiring_job_roles,
           name: payload.name,
           env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-        }),
+        })
       ),
       careerProgress: await idempotencyKeys.create(
         generateHash({
@@ -433,7 +434,7 @@ export const generateStudentPrepPack = schemaTask({
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
           env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-        }),
+        })
       ),
       improvementActionPlan: await idempotencyKeys.create(
         generateHash({
@@ -444,7 +445,7 @@ export const generateStudentPrepPack = schemaTask({
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
           env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-        }),
+        })
       ),
       recommendedProjectIdeas: await idempotencyKeys.create(
         generateHash({
@@ -455,7 +456,7 @@ export const generateStudentPrepPack = schemaTask({
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
           env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-        }),
+        })
       ),
       resourceRecommendations: await idempotencyKeys.create(
         generateHash({
@@ -466,11 +467,11 @@ export const generateStudentPrepPack = schemaTask({
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
           env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-        }),
+        })
       ),
-    };
+    }
 
-    logger.log("Idempotency keys generated");
+    logger.log("Idempotency keys generated")
 
     const [
       inspirationalMessage,
@@ -490,7 +491,7 @@ export const generateStudentPrepPack = schemaTask({
           idempotencyKey: keys.inspirationalMessage,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
-        },
+        }
       ),
       generateCareerProgress.trigger(
         {
@@ -505,7 +506,7 @@ export const generateStudentPrepPack = schemaTask({
           idempotencyKey: keys.careerProgress,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
-        },
+        }
       ),
       generateImprovementActionPlan.trigger(
         {
@@ -520,7 +521,7 @@ export const generateStudentPrepPack = schemaTask({
           idempotencyKey: keys.improvementActionPlan,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
-        },
+        }
       ),
       generateRecommendedProjectIdeas.trigger(
         {
@@ -535,7 +536,7 @@ export const generateStudentPrepPack = schemaTask({
           idempotencyKey: keys.recommendedProjectIdeas,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
-        },
+        }
       ),
       generateResourceRecommendations.trigger(
         {
@@ -550,11 +551,11 @@ export const generateStudentPrepPack = schemaTask({
           idempotencyKey: keys.resourceRecommendations,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
-        },
+        }
       ),
-    ]);
+    ])
 
-    logger.log("All tasks triggered");
+    logger.log("All tasks triggered")
 
     const groupPoll = await Promise.all([
       runs.poll(inspirationalMessage, {
@@ -572,7 +573,7 @@ export const generateStudentPrepPack = schemaTask({
       runs.poll(resourceRecommendations, {
         pollIntervalMs: 5000,
       }),
-    ]);
+    ])
 
     const final = {
       inspirationalMessage: groupPoll[0].output,
@@ -580,13 +581,13 @@ export const generateStudentPrepPack = schemaTask({
       improvementActionPlan: groupPoll[2].output,
       recommendedProjectIdeas: groupPoll[3].output,
       resourceRecommendations: groupPoll[4].output,
-    };
+    }
 
-    logger.log("All tasks completed", final);
+    logger.log("All tasks completed", final)
 
-    return final;
+    return final
   },
-});
+})
 
 export const generateInterviewPrepQuestionsPerJobDesc = schemaTask({
   id: "generate-interview-prep-per-jd",
@@ -605,13 +606,13 @@ export const generateInterviewPrepQuestionsPerJobDesc = schemaTask({
     certifications: z.array(z.unknown()),
   }),
   run: async (payload) => {
-    logger.log("Payload", { payload });
+    logger.log("Payload", { payload })
     const studentDetails = {
       jobsRolesStudentAspires: payload.aspiring_job_roles,
       projectsDoneByStudent: payload.projects_done,
       educationExperiences: payload.education_experiences,
       certifications: payload.certifications,
-    };
+    }
     const res = await chat({
       agent: "interview-coach",
       content: `Hey need help generating some project ideas for a student.
@@ -637,9 +638,9 @@ The response must be in the following json format:
 \`\`\`
 `,
       name: "mentor",
-    });
+    })
 
-    logger.log("Raw response", { res });
+    logger.log("Raw response", { res })
 
     // validate the response;
 
@@ -648,18 +649,18 @@ The response must be in the following json format:
         z.object({
           question: z.string(),
           answers: z.array(z.string()),
-        }),
+        })
       ),
       suggestions: z.array(z.string()).optional(),
-    });
+    })
 
-    const jsonParsed = JSON.parse(res);
+    const jsonParsed = JSON.parse(res)
 
-    const parsedOutput = responseSchema.parse(jsonParsed);
+    const parsedOutput = responseSchema.parse(jsonParsed)
 
-    const modelSuggestions = parsedOutput;
+    const modelSuggestions = parsedOutput
 
-    let resouceSuggestions: YoutubeMetadata[] = [];
+    let resouceSuggestions: YoutubeMetadata[] = []
 
     // fetch related resources for the student based on the job description
     try {
@@ -667,35 +668,35 @@ The response must be in the following json format:
         name: "youtube-videos",
         query: JSON.stringify(payload.job.details),
         k: 5,
-      });
+      })
 
       const duplicateFilteredResources = relatedResources.filter(
         (resource, index, self) => {
           const indexInSelf = self.findIndex(
-            (r) => r.metadata.url === resource.metadata.url,
-          );
-          return index === indexInSelf;
-        },
-      );
+            (r) => r.metadata.url === resource.metadata.url
+          )
+          return index === indexInSelf
+        }
+      )
 
       if (!duplicateFilteredResources.length) {
-        throw new Error("No resources found for the job description");
+        throw new Error("No resources found for the job description")
       }
 
-      resouceSuggestions = duplicateFilteredResources.map((r) => r.metadata);
+      resouceSuggestions = duplicateFilteredResources.map((r) => r.metadata)
     } catch (error) {
-      logger.error("Error fetching resources", { error });
+      logger.error("Error fetching resources", { error })
     }
 
     return {
       modelSuggestions,
       resouceSuggestions,
-    };
+    }
   },
-});
+})
 
 function generateHash(payload: object) {
-  const hash = createHash("sha256");
-  hash.update(JSON.stringify(payload));
-  return hash.digest("hex");
+  const hash = createHash("sha256")
+  hash.update(JSON.stringify(payload))
+  return hash.digest("hex")
 }

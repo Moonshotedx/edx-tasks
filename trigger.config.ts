@@ -1,4 +1,4 @@
-import { defineConfig } from "@trigger.dev/sdk/v3";
+import { defineConfig } from "@trigger.dev/sdk/v3"
 
 export default defineConfig({
   project: "proj_edohlvixnbqkhetyojnc",
@@ -17,4 +17,4 @@ export default defineConfig({
     },
   },
   dirs: ["./src/trigger"],
-});
+})

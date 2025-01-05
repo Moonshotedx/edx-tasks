@@ -1,20 +1,20 @@
 interface InterviewQuestion {
-  question: string;
-  answers: [string, string, string];
+  question: string
+  answers: [string, string, string]
 }
 
-const makima_url = process.env.MAKIMA_URL;
+const makima_url = process.env.MAKIMA_URL
 
 if (!makima_url) {
-  throw new Error("MAKIMA_URL env variable is required");
+  throw new Error("MAKIMA_URL env variable is required")
 }
 
 export async function generateInterviewPrep(
   userContext: string,
-  jobContext: string,
+  jobContext: string
 ): Promise<{
-  questions: InterviewQuestion[];
-  suggestions?: string[];
+  questions: InterviewQuestion[]
+  suggestions?: string[]
 }> {
   const response = await fetch(`${makima_url}/agent/interview-coach/chat`, {
     method: "POST",
@@ -43,18 +43,18 @@ Based on the above user and job details generate a json of the following type:
 \`\`\`
 `,
     }),
-  });
+  })
 
   // Parse the response and return the interview question
-  const result = await response.json();
+  const result = await response.json()
   const message = result as {
-    content: string;
-  };
+    content: string
+  }
 
-  const questions = JSON.parse(message.content);
+  const questions = JSON.parse(message.content)
   return questions as {
-    questions: InterviewQuestion[];
-  };
+    questions: InterviewQuestion[]
+  }
 }
 
 export async function chat({
@@ -62,9 +62,9 @@ export async function chat({
   content,
   name,
 }: {
-  agent: string;
-  content: string;
-  name?: string;
+  agent: string
+  content: string
+  name?: string
 }): Promise<string> {
   const response = await fetch(`${makima_url}/agent/${agent}/chat`, {
     method: "POST",
@@ -76,12 +76,12 @@ export async function chat({
       name: name ?? "user",
       content,
     }),
-  });
-  const result_1 = await response.json();
+  })
+  const result_1 = await response.json()
   const message = result_1 as {
-    content: string;
-  };
-  return message.content;
+    content: string
+  }
+  return message.content
 }
 
 export async function searchKnowledgeBase<T>({
@@ -89,9 +89,9 @@ export async function searchKnowledgeBase<T>({
   query,
   k,
 }: {
-  name: string;
-  query: string;
-  k: number;
+  name: string
+  query: string
+  k: number
 }) {
   const response = await fetch(
     `${makima_url}/knowledge/${name}/search?q=${encodeURIComponent(query)}&k=${k}`,
@@ -99,15 +99,15 @@ export async function searchKnowledgeBase<T>({
       headers: {
         "Content-Type": "application/json",
       },
-    },
-  );
-  const result = await response.json();
+    }
+  )
+  const result = await response.json()
   const results = result as {
-    id: string;
-    content: string;
-    model: string;
-    metadata: T;
-  }[];
+    id: string
+    content: string
+    model: string
+    metadata: T
+  }[]
 
-  return results;
+  return results
 }

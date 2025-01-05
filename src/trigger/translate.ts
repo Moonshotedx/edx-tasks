@@ -1,6 +1,7 @@
-import { logger, schemaTask } from "@trigger.dev/sdk/v3";
-import { z } from "zod";
-import { chat } from "../lib/makima";
+import { logger, schemaTask } from "@trigger.dev/sdk/v3"
+import { z } from "zod"
+
+import { chat } from "../lib/makima"
 
 export const generateTranslationsTask = schemaTask({
   id: "translate",
@@ -16,7 +17,7 @@ export const generateTranslationsTask = schemaTask({
   }),
 
   run: async (payload) => {
-    logger.log("Payload", { payload });
+    logger.log("Payload", { payload })
     const res = await chat({
       agent: "general",
       content: `You need to translate the given text
@@ -37,19 +38,19 @@ The response muyst be in the following format:
 }
 `,
       name: "user",
-    });
+    })
 
-    logger.log("Raw response", { res });
+    logger.log("Raw response", { res })
 
     // validate the response;
     const responseSchema = z.object({
       translation: z.string(),
-    });
+    })
 
-    const jsonParsed = JSON.parse(res);
+    const jsonParsed = JSON.parse(res)
 
-    const parsedOutput = responseSchema.parse(jsonParsed);
+    const parsedOutput = responseSchema.parse(jsonParsed)
 
-    return parsedOutput;
+    return parsedOutput
   },
-});
+})
