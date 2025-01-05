@@ -57,6 +57,26 @@ Based on the above user and job details generate a json of the following type:
   }
 }
 
+/**
+ * Sanitizes a string to ensure it matches the pattern '^[a-zA-Z0-9_-]+$'.
+ * Removes any invalid characters.
+ *
+ * @param name - The input string to sanitize.
+ * @returns A sanitized string matching the specified pattern.
+ */
+function sanitizeName(name: string): string {
+  // Define the valid pattern
+  const validPattern = /^[a-zA-Z0-9_-]+$/
+
+  // Check if the name matches the pattern
+  if (validPattern.test(name)) {
+    return name // Return as-is if already valid
+  }
+
+  // Remove invalid characters and return the sanitized string
+  return name.replace(/[^a-zA-Z0-9_-]/g, "")
+}
+
 export async function chat({
   agent,
   content,
@@ -73,7 +93,7 @@ export async function chat({
     },
     body: JSON.stringify({
       role: "human",
-      name: name ?? "user",
+      name: sanitizeName(name || "user"),
       content,
     }),
   })
