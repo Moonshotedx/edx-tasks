@@ -5,8 +5,8 @@ import zodToJsonSchema from "zod-to-json-schema"
 import { chat } from "../lib/makima"
 
 const profileSummaryResponseSchema = z.object({
-  highlights: z.array(z.string()).max(5),
-  points: z.array(z.string()).max(5),
+  highlights: z.array(z.string()).max(3),
+  points: z.array(z.string()).max(3),
 })
 
 const promptSchema = JSON.stringify(
