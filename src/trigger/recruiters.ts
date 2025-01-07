@@ -1,7 +1,8 @@
-import { logger, schemaTask } from "@trigger.dev/sdk/v3";
-import { chat } from "../lib/makima";
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { logger, schemaTask } from "@trigger.dev/sdk/v3"
+import { z } from "zod"
+import { zodToJsonSchema } from "zod-to-json-schema"
+
+import { chat } from "../lib/makima"
 
 // Define the schema
 const jobDescriptionSchema = z.object({
@@ -31,12 +32,10 @@ const jobDescriptionSchema = z.object({
   ),
   job_type: z.enum(["full-time", "part-time", "internship"]),
   requirements: z.string().optional(),
-  application_deadline: z
-    .string()
-    .refine((date) => !isNaN(Date.parse(date)), {
-      message:
-        "Invalid date format, must be in ISO format: YYYY-MM-DDTHH:mm:ss.sssZ",
-    }),
+  application_deadline: z.string().refine((date) => !isNaN(Date.parse(date)), {
+    message:
+      "Invalid date format, must be in ISO format: YYYY-MM-DDTHH:mm:ss.sssZ",
+  }),
   meta_data: z.object({
     experience: z.string().optional(),
     faqs: z.array(
@@ -86,11 +85,11 @@ const jobDescriptionSchema = z.object({
       }),
     }),
   }),
-});
+})
 
 // Convert schema to JSON Schema
-const jobDescriptionJsonSchema = zodToJsonSchema(jobDescriptionSchema);
-const schemaString = JSON.stringify(jobDescriptionJsonSchema, null, 2); 
+const jobDescriptionJsonSchema = zodToJsonSchema(jobDescriptionSchema)
+const schemaString = JSON.stringify(jobDescriptionJsonSchema, null, 2)
 
 export const parseJobDescription = schemaTask({
   id: "job-description-parser",
@@ -100,13 +99,13 @@ export const parseJobDescription = schemaTask({
     randomize: true,
   },
   schema: z.object({
-    job_description: z.string(), // giving raw job description 
+    job_description: z.string(), // giving raw job description
   }),
 
   run: async (payload, { ctx }) => {
     logger.log("Received job description", {
       job_description: payload.job_description,
-    });
+    })
 
     // use the schema in the prompt
     const res = await chat({
@@ -119,21 +118,21 @@ export const parseJobDescription = schemaTask({
       
       Job Description: ${payload.job_description}
       `,
-    });
+    })
 
-    logger.log("LLM response", { response: res });
+    logger.log("LLM response", { response: res })
 
     // Parse and validate the response
-    const parsedResponse = JSON.parse(res);
+    const parsedResponse = JSON.parse(res)
     try {
-      jobDescriptionSchema.parse(parsedResponse);
+      jobDescriptionSchema.parse(parsedResponse)
       logger.log("Validated response successfully", {
         validatedResponse: parsedResponse,
-      });
-      return parsedResponse;
+      })
+      return parsedResponse
     } catch (e) {
-      logger.error("Validation failed", { error: e });
-      throw new Error("LLM response did not match the expected schema");
+      logger.error("Validation failed", { error: e })
+      throw new Error("LLM response did not match the expected schema")
     }
   },
-});
+})
