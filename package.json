@@ -7,8 +7,9 @@
     "dev": "npx trigger.dev@latest dev"
   },
   "dependencies": {
-    "@trigger.dev/sdk": "3.3.7",
+    "@trigger.dev/sdk": "3.3.13",
     "makima-ts": "1.0.0-alpha.4",
+    "pg": "^8.13.1",
     "youtube-transcript": "^1.2.1",
     "youtubei": "^1.6.7",
     "zeptomail": "^6.1.0",
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.8.2",
+    "@types/pg": "^8.11.10",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.7.2"
