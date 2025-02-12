@@ -39,6 +39,10 @@ export const generateProfileSummary = schemaTask({
 Here is my current profile:
 ${JSON.stringify(payload, null, 2)}
 
+If the above profile does not have detailed enough information, please add message for the user to fill their profile to get better summaries.
+
+Do not make up any information, only use the information provided in the profile, if not enough information is provided, ask the user to provide more information.
+
 The response must follow the following JSON schema:
 \`\`\`
 ${promptSchema}
