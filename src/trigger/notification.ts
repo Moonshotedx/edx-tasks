@@ -22,15 +22,8 @@ export const applyJobAndSendEmail = schemaTask({
 
   run: async (payload) => {
     logger.info("Starting applyJobAndSendEmail task", { payload })
-    const {
-      user_email,
-      user_name,
-      job_title,
-      company_name,
-      phone_number,
-      send_whatsapp,
-      send_email,
-    } = payload
+    const { user_email, user_name, job_title, company_name, phone_number, send_whatsapp, send_email } =
+      payload
 
     if (send_email) {
       logger.info("Initiating email sending process", { user_email, job_title })
@@ -40,10 +33,10 @@ export const applyJobAndSendEmail = schemaTask({
           url: process.env.ZEPTOMAIL_URL,
         })
 
-        logger.debug("Email template parameters", {
-          company_name,
-          user_name,
-          job_title,
+        logger.debug("Email template parameters", { 
+          company_name, 
+          user_name, 
+          job_title 
         })
         await sendMailClient.sendMailWithTemplate({
           template_key:
@@ -104,29 +97,24 @@ export const applyJobAndSendEmail = schemaTask({
 
         logger.debug("WhatsApp payload", { watiPayload })
 
-        const watiResponse = await fetch(
-          `${watiUrl}?${queryParams.toString()}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${watiToken}`,
-            },
-            body: JSON.stringify(watiPayload),
-          }
-        )
+        const watiResponse = await fetch(`${watiUrl}?${queryParams.toString()}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${watiToken}`,
+          },
+          body: JSON.stringify(watiPayload),
+        })
 
         if (!watiResponse.ok) {
-          const responseText = await watiResponse.text()
-          logger.error("WhatsApp API error", {
+          const responseText = await watiResponse.text();
+          logger.error("WhatsApp API error", { 
             status: watiResponse.status,
             statusText: watiResponse.statusText,
             responseText,
-            phone_number,
-          })
-          throw new Error(
-            `WATI API Error: ${watiResponse.status} - ${responseText}`
-          )
+            phone_number 
+          });
+          throw new Error(`WATI API Error: ${watiResponse.status} - ${responseText}`);
         }
         logger.info("WhatsApp message sent successfully", { phone_number })
       } catch (error) {
@@ -179,9 +167,9 @@ export const sendDecisionMail = schemaTask({
     } = payload
 
     if (send_email) {
-      logger.info("Initiating decision email process", {
-        user_email,
-        decision,
+      logger.info("Initiating decision email process", { 
+        user_email, 
+        decision 
       })
       try {
         const sendMailClient = new SendMailClient({
@@ -195,9 +183,7 @@ export const sendDecisionMail = schemaTask({
             : "2518b.1f3f9645fe91eda6.k1.b05ad071-bb89-11ef-aefe-52540038fbba.193cea21ef4"
 
         const templateAlias =
-          decision === "accepted"
-            ? "applicationaccepted"
-            : "applicationrejected"
+          decision === "accepted" ? "applicationaccepted" : "applicationrejected"
 
         const mergeInfo =
           decision === "accepted"
@@ -215,10 +201,10 @@ export const sendDecisionMail = schemaTask({
                 job_title: job_title,
               }
 
-        logger.debug("Email template selected", {
-          templateKey,
+        logger.debug("Email template selected", { 
+          templateKey, 
           templateAlias,
-          mergeInfo,
+          mergeInfo 
         })
         await sendMailClient.sendMailWithTemplate({
           template_key: templateKey,
@@ -243,9 +229,9 @@ export const sendDecisionMail = schemaTask({
             },
           ],
         })
-        logger.info("Decision email sent successfully", {
-          user_email,
-          decision,
+        logger.info("Decision email sent successfully", { 
+          user_email, 
+          decision 
         })
       } catch (error) {
         logger.error("Decision email failed", { error, user_email })
@@ -254,16 +240,14 @@ export const sendDecisionMail = schemaTask({
     }
 
     if (send_whatsapp) {
-      logger.info("Initiating decision WhatsApp message", {
+      logger.info("Initiating decision WhatsApp message", { 
         phone_number,
-        decision,
+        decision 
       })
       try {
         const watiUrl = process.env.WATI_API_URL
         const watiTemplateName =
-          decision === "accepted"
-            ? "application_accepted"
-            : "application_rejected"
+          decision === "accepted" ? "application_accepted" : "application_rejected"
 
         const watiPayload =
           decision === "accepted"
@@ -308,20 +292,18 @@ export const sendDecisionMail = schemaTask({
         )
 
         if (!watiResponse.ok) {
-          const responseText = await watiResponse.text()
+          const responseText = await watiResponse.text();
           logger.error("WATI API Error", {
             status: watiResponse.status,
             statusText: watiResponse.statusText,
-            responseText,
-          })
-          throw new Error(
-            `WATI API Error: ${watiResponse.status} - ${responseText}`
-          )
+            responseText
+          });
+          throw new Error(`WATI API Error: ${watiResponse.status} - ${responseText}`);
         }
 
-        logger.info("Decision WhatsApp sent successfully", {
+        logger.info("Decision WhatsApp sent successfully", { 
           phone_number,
-          decision,
+          decision 
         })
       } catch (error) {
         logger.error("Decision WhatsApp failed", { error, phone_number })
@@ -382,16 +364,16 @@ export const sendJobEmail = schemaTask({
 
     // Send email only if send_email is true
     if (send_email) {
-      logger.info("Initiating job notification email", {
+      logger.info("Initiating job notification email", { 
         institute_email,
-        job_title,
+        job_title 
       })
       try {
         logger.debug("Job notification email parameters", {
           job_type,
           company_name,
           job_title,
-          job_location,
+          job_location
         })
         await sendMailClient.sendMailWithTemplate({
           template_key:
@@ -428,9 +410,9 @@ export const sendJobEmail = schemaTask({
         })
         logger.info("Job notification email sent", { institute_email })
       } catch (error) {
-        logger.error("Job notification email failed", {
-          error,
-          institute_email,
+        logger.error("Job notification email failed", { 
+          error, 
+          institute_email 
         })
         throw error
       }
@@ -463,35 +445,30 @@ export const sendJobEmail = schemaTask({
 
         logger.debug("Job notification WhatsApp payload", { watiPayload })
 
-        const watiResponse = await fetch(
-          `${watiUrl}?${queryParams.toString()}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${watiToken}`,
-            },
-            body: JSON.stringify(watiPayload),
-          }
-        )
+        const watiResponse = await fetch(`${watiUrl}?${queryParams.toString()}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${watiToken}`,
+          },
+          body: JSON.stringify(watiPayload),
+        })
 
         if (!watiResponse.ok) {
-          const responseText = await watiResponse.text()
-          logger.error("Job notification WhatsApp failed", {
+          const responseText = await watiResponse.text();
+          logger.error("Job notification WhatsApp failed", { 
             status: watiResponse.status,
             statusText: watiResponse.statusText,
             responseText,
-            phone_number,
-          })
-          throw new Error(
-            `WATI API Error: ${watiResponse.status} - ${responseText}`
-          )
+            phone_number 
+          });
+          throw new Error(`WATI API Error: ${watiResponse.status} - ${responseText}`);
         }
         logger.info("Job notification WhatsApp sent", { phone_number })
       } catch (error) {
-        logger.error("Job notification WhatsApp failed", {
+        logger.error("Job notification WhatsApp failed", { 
           error,
-          phone_number,
+          phone_number 
         })
         throw error
       }
