@@ -4,9 +4,11 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "npx trigger.dev@latest dev"
+    "dev": "npx trigger.dev@3.3.12 dev"
   },
   "dependencies": {
+    "@trigger.dev/sdk": "3.3.12",
+    "dify-client": "^2.3.2",
     "@trigger.dev/sdk": "3.3.13",
     "makima-ts": "1.0.0-alpha.4",
     "pg": "^8.13.1",
