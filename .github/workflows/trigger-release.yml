@@ -12,13 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: "20"
+          bun-version: "latest"
 
       - name: Install dependencies
-        run: npm install
+        run: bun install
 
       # docker setup - part 1
       - name: Set up Docker Buildx
@@ -39,7 +39,7 @@ jobs:
           REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
         run: |
           # Deploy to staging environment
-          npx trigger.dev@3.3.12 deploy --self-hosted --push --registry "$REGISTRY_URL" --env staging
+          bunx trigger.dev@3.3.12 deploy --self-hosted --push --registry "$REGISTRY_URL" --env staging
 
           # Deploy to production environment
-          npx trigger.dev@3.3.12 deploy --self-hosted --push --registry "$REGISTRY_URL" --env prod
+          bunx trigger.dev@3.3.12 deploy --self-hosted --push --registry "$REGISTRY_URL" --env prod
