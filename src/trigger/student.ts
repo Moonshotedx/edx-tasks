@@ -480,7 +480,7 @@ export const generateStudentPrepPack = schemaTask({
       recommendedProjectIdeas,
       resourceRecommendations,
     ] = await Promise.all([
-      await generateInpirationalMessage.triggerAndWait(
+      await generateInpirationalMessage.trigger(
         {
           name: payload.name,
           email: payload.email,
@@ -493,7 +493,7 @@ export const generateStudentPrepPack = schemaTask({
         //   process.env.NODE_ENV !== "production" ? "10m" : "14d",
         // }
       ),
-      generateCareerProgress.triggerAndWait(
+      generateCareerProgress.trigger(
         {
           name: payload.name,
           email: payload.email,
@@ -508,7 +508,7 @@ export const generateStudentPrepPack = schemaTask({
         //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
         // }
       ),
-      generateImprovementActionPlan.triggerAndWait(
+      generateImprovementActionPlan.trigger(
         {
           name: payload.name,
           email: payload.email,
@@ -523,7 +523,7 @@ export const generateStudentPrepPack = schemaTask({
         //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
         // }
       ),
-      generateRecommendedProjectIdeas.triggerAndWait(
+      generateRecommendedProjectIdeas.trigger(
         {
           name: payload.name,
           email: payload.email,
@@ -538,7 +538,7 @@ export const generateStudentPrepPack = schemaTask({
         //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
         // }
       ),
-      generateResourceRecommendations.triggerAndWait(
+      generateResourceRecommendations.trigger(
         {
           name: payload.name,
           email: payload.email,
