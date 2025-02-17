@@ -1,5 +1,11 @@
 import { createHash } from "crypto"
-import { idempotencyKeys, logger, runs, schemaTask } from "@trigger.dev/sdk/v3"
+import {
+  batch,
+  idempotencyKeys,
+  logger,
+  runs,
+  schemaTask,
+} from "@trigger.dev/sdk/v3"
 import { z } from "zod"
 
 import { chat, searchKnowledgeBase } from "../lib/makima"
@@ -473,123 +479,190 @@ export const generateStudentPrepPack = schemaTask({
     //
     // logger.log("Idempotency keys generated")
 
-    const [
-      inspirationalMessage,
-      careerProgress,
-      improvementActionPlan,
-      recommendedProjectIdeas,
-      resourceRecommendations,
-    ] = await Promise.all([
-      await generateInpirationalMessage.trigger(
-        {
+    // const [
+    //   inspirationalMessage,
+    //   careerProgress,
+    //   improvementActionPlan,
+    //   recommendedProjectIdeas,
+    //   resourceRecommendations,
+    // ] = await Promise.all([
+    //   await generateInpirationalMessage.trigger(
+    //     {
+    //       name: payload.name,
+    //       email: payload.email,
+    //       aspiring_companies: payload.aspiring_companies,
+    //       aspiring_job_roles: payload.aspiring_job_roles,
+    //     }
+    //     // {
+    //     // idempotencyKey: keys.inspirationalMessage,
+    //     // idempotencyKeyTTL:
+    //     //   process.env.NODE_ENV !== "production" ? "10m" : "14d",
+    //     // }
+    //   ),
+    //   generateCareerProgress.trigger(
+    //     {
+    //       name: payload.name,
+    //       email: payload.email,
+    //       aspiring_job_roles: payload.aspiring_job_roles,
+    //       projects_done: payload.projects_done,
+    //       education_experiences: payload.education_experiences,
+    //       certifications: payload.certifications,
+    //     }
+    //     // {
+    //     //   idempotencyKey: keys.careerProgress,
+    //     //   idempotencyKeyTTL:
+    //     //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
+    //     // }
+    //   ),
+    //   generateImprovementActionPlan.trigger(
+    //     {
+    //       name: payload.name,
+    //       email: payload.email,
+    //       aspiring_job_roles: payload.aspiring_job_roles,
+    //       projects_done: payload.projects_done,
+    //       education_experiences: payload.education_experiences,
+    //       certifications: payload.certifications,
+    //     }
+    //     // {
+    //     //   idempotencyKey: keys.improvementActionPlan,
+    //     //   idempotencyKeyTTL:
+    //     //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
+    //     // }
+    //   ),
+    //   generateRecommendedProjectIdeas.trigger(
+    //     {
+    //       name: payload.name,
+    //       email: payload.email,
+    //       aspiring_job_roles: payload.aspiring_job_roles,
+    //       projects_done: payload.projects_done,
+    //       education_experiences: payload.education_experiences,
+    //       certifications: payload.certifications,
+    //     }
+    //     // {
+    //     //   idempotencyKey: keys.recommendedProjectIdeas,
+    //     //   idempotencyKeyTTL:
+    //     //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
+    //     // }
+    //   ),
+    //   generateResourceRecommendations.trigger(
+    //     {
+    //       name: payload.name,
+    //       email: payload.email,
+    //       aspiring_job_roles: payload.aspiring_job_roles,
+    //       projects_done: payload.projects_done,
+    //       education_experiences: payload.education_experiences,
+    //       certifications: payload.certifications,
+    //     }
+    //     // {
+    //     //   idempotencyKey: keys.resourceRecommendations,
+    //     //   idempotencyKeyTTL:
+    //     //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
+    //     // }
+    //   ),
+    // ])
+
+    // logger.log("All tasks ran", {
+    //   inspirationalMessage,
+    //   careerProgress,
+    //   improvementActionPlan,
+    //   recommendedProjectIdeas,
+    //   resourceRecommendations,
+    // })
+
+    // replace the above with batch trigger
+
+    const batchRes = await batch.triggerAndWait([
+      {
+        id: "inspire-student",
+        payload: {
           name: payload.name,
           email: payload.email,
           aspiring_companies: payload.aspiring_companies,
           aspiring_job_roles: payload.aspiring_job_roles,
-        }
-        // {
-        // idempotencyKey: keys.inspirationalMessage,
-        // idempotencyKeyTTL:
-        //   process.env.NODE_ENV !== "production" ? "10m" : "14d",
-        // }
-      ),
-      generateCareerProgress.trigger(
-        {
+        },
+      },
+      {
+        id: "get-career-progress",
+        payload: {
           name: payload.name,
           email: payload.email,
           aspiring_job_roles: payload.aspiring_job_roles,
           projects_done: payload.projects_done,
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
-        }
-        // {
-        //   idempotencyKey: keys.careerProgress,
-        //   idempotencyKeyTTL:
-        //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
-        // }
-      ),
-      generateImprovementActionPlan.trigger(
-        {
+        },
+      },
+      {
+        id: "generate-improvement-action-plan",
+        payload: {
           name: payload.name,
           email: payload.email,
           aspiring_job_roles: payload.aspiring_job_roles,
           projects_done: payload.projects_done,
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
-        }
-        // {
-        //   idempotencyKey: keys.improvementActionPlan,
-        //   idempotencyKeyTTL:
-        //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
-        // }
-      ),
-      generateRecommendedProjectIdeas.trigger(
-        {
+        },
+      },
+      {
+        id: "generate-recommended-project-ideas",
+        payload: {
           name: payload.name,
           email: payload.email,
           aspiring_job_roles: payload.aspiring_job_roles,
           projects_done: payload.projects_done,
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
-        }
-        // {
-        //   idempotencyKey: keys.recommendedProjectIdeas,
-        //   idempotencyKeyTTL:
-        //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
-        // }
-      ),
-      generateResourceRecommendations.trigger(
-        {
+        },
+      },
+      {
+        id: "generate-resource-recommendations",
+        payload: {
           name: payload.name,
           email: payload.email,
           aspiring_job_roles: payload.aspiring_job_roles,
           projects_done: payload.projects_done,
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
-        }
-        // {
-        //   idempotencyKey: keys.resourceRecommendations,
-        //   idempotencyKeyTTL:
-        //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
-        // }
-      ),
+        },
+      },
     ])
 
-    logger.log("All tasks ran", {
-      inspirationalMessage,
-      careerProgress,
-      improvementActionPlan,
-      recommendedProjectIdeas,
-      resourceRecommendations,
+    // const groupPoll = await Promise.all([
+    //   runs.poll(inspirationalMessage.id, {
+    //     pollIntervalMs: 1000,
+    //   }),
+    //   runs.poll(careerProgress.id, {
+    //     pollIntervalMs: 2000,
+    //   }),
+    //   runs.poll(improvementActionPlan.id, {
+    //     pollIntervalMs: 3000,
+    //   }),
+    //   runs.poll(recommendedProjectIdeas.id, {
+    //     pollIntervalMs: 4000,
+    //   }),
+    //   runs.poll(resourceRecommendations.id, {
+    //     pollIntervalMs: 5000,
+    //   }),
+    // ])
+
+    const outputs = batchRes.runs.map((r) => {
+      if (r.ok) {
+        logger.log("Task completed", r.output)
+        return r.output
+      }
+      return null
     })
-
-    const groupPoll = await Promise.all([
-      runs.poll(inspirationalMessage.id, {
-        pollIntervalMs: 1000,
-      }),
-      runs.poll(careerProgress.id, {
-        pollIntervalMs: 2000,
-      }),
-      runs.poll(improvementActionPlan.id, {
-        pollIntervalMs: 3000,
-      }),
-      runs.poll(recommendedProjectIdeas.id, {
-        pollIntervalMs: 4000,
-      }),
-      runs.poll(resourceRecommendations.id, {
-        pollIntervalMs: 5000,
-      }),
-    ])
+    logger.log("Outputs", { outputs })
 
     const final = {
-      inspirationalMessage: groupPoll[0].output,
-      careerProgress: groupPoll[1].output,
-      improvementActionPlan: groupPoll[2].output,
-      recommendedProjectIdeas: groupPoll[3].output,
-      resourceRecommendations: groupPoll[4].output,
+      inspirationalMessage: outputs[0],
+      careerProgress: outputs[1],
+      improvementActionPlan: outputs[2],
+      recommendedProjectIdeas: outputs[3],
+      resourceRecommendations: outputs[4],
     }
 
-    logger.log("All tasks completed", final)
+    logger.log("All tasks completed")
 
     return final
   },
