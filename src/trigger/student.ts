@@ -416,62 +416,62 @@ export const generateStudentPrepPack = schemaTask({
   run: async (payload) => {
     logger.log("env", { env: process.env.NODE_ENV })
 
-    const keys = {
-      inspirationalMessage: await idempotencyKeys.create(
-        generateHash({
-          email: payload.email,
-          aspiring_job_roles: payload.aspiring_job_roles,
-          name: payload.name,
-          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-        })
-      ),
-      careerProgress: await idempotencyKeys.create(
-        generateHash({
-          email: payload.email,
-          aspiring_job_roles: payload.aspiring_job_roles,
-          name: payload.name,
-          projects_done: payload.projects_done,
-          education_experiences: payload.education_experiences,
-          certifications: payload.certifications,
-          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-        })
-      ),
-      improvementActionPlan: await idempotencyKeys.create(
-        generateHash({
-          email: payload.email,
-          aspiring_job_roles: payload.aspiring_job_roles,
-          name: payload.name,
-          projects_done: payload.projects_done,
-          education_experiences: payload.education_experiences,
-          certifications: payload.certifications,
-          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-        })
-      ),
-      recommendedProjectIdeas: await idempotencyKeys.create(
-        generateHash({
-          email: payload.email,
-          aspiring_job_roles: payload.aspiring_job_roles,
-          name: payload.name,
-          projects_done: payload.projects_done,
-          education_experiences: payload.education_experiences,
-          certifications: payload.certifications,
-          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-        })
-      ),
-      resourceRecommendations: await idempotencyKeys.create(
-        generateHash({
-          email: payload.email,
-          aspiring_job_roles: payload.aspiring_job_roles,
-          name: payload.name,
-          projects_done: payload.projects_done,
-          education_experiences: payload.education_experiences,
-          certifications: payload.certifications,
-          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-        })
-      ),
-    }
-
-    logger.log("Idempotency keys generated")
+    // const keys = {
+    //   inspirationalMessage: await idempotencyKeys.create(
+    //     generateHash({
+    //       email: payload.email,
+    //       aspiring_job_roles: payload.aspiring_job_roles,
+    //       name: payload.name,
+    //       env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+    //     })
+    //   ),
+    //   careerProgress: await idempotencyKeys.create(
+    //     generateHash({
+    //       email: payload.email,
+    //       aspiring_job_roles: payload.aspiring_job_roles,
+    //       name: payload.name,
+    //       projects_done: payload.projects_done,
+    //       education_experiences: payload.education_experiences,
+    //       certifications: payload.certifications,
+    //       env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+    //     })
+    //   ),
+    //   improvementActionPlan: await idempotencyKeys.create(
+    //     generateHash({
+    //       email: payload.email,
+    //       aspiring_job_roles: payload.aspiring_job_roles,
+    //       name: payload.name,
+    //       projects_done: payload.projects_done,
+    //       education_experiences: payload.education_experiences,
+    //       certifications: payload.certifications,
+    //       env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+    //     })
+    //   ),
+    //   recommendedProjectIdeas: await idempotencyKeys.create(
+    //     generateHash({
+    //       email: payload.email,
+    //       aspiring_job_roles: payload.aspiring_job_roles,
+    //       name: payload.name,
+    //       projects_done: payload.projects_done,
+    //       education_experiences: payload.education_experiences,
+    //       certifications: payload.certifications,
+    //       env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+    //     })
+    //   ),
+    //   resourceRecommendations: await idempotencyKeys.create(
+    //     generateHash({
+    //       email: payload.email,
+    //       aspiring_job_roles: payload.aspiring_job_roles,
+    //       name: payload.name,
+    //       projects_done: payload.projects_done,
+    //       education_experiences: payload.education_experiences,
+    //       certifications: payload.certifications,
+    //       env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+    //     })
+    //   ),
+    // }
+    //
+    // logger.log("Idempotency keys generated")
 
     const [
       inspirationalMessage,
@@ -480,20 +480,20 @@ export const generateStudentPrepPack = schemaTask({
       recommendedProjectIdeas,
       resourceRecommendations,
     ] = await Promise.all([
-      await generateInpirationalMessage.trigger(
+      await generateInpirationalMessage.triggerAndWait(
         {
           name: payload.name,
           email: payload.email,
           aspiring_companies: payload.aspiring_companies,
           aspiring_job_roles: payload.aspiring_job_roles,
-        },
-        {
-          idempotencyKey: keys.inspirationalMessage,
-          idempotencyKeyTTL:
-            process.env.NODE_ENV !== "production" ? "10m" : "14d",
         }
+        // {
+        // idempotencyKey: keys.inspirationalMessage,
+        // idempotencyKeyTTL:
+        //   process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        // }
       ),
-      generateCareerProgress.trigger(
+      generateCareerProgress.triggerAndWait(
         {
           name: payload.name,
           email: payload.email,
@@ -501,14 +501,14 @@ export const generateStudentPrepPack = schemaTask({
           projects_done: payload.projects_done,
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
-        },
-        {
-          idempotencyKey: keys.careerProgress,
-          idempotencyKeyTTL:
-            process.env.NODE_ENV !== "production" ? "10m" : "14d",
         }
+        // {
+        //   idempotencyKey: keys.careerProgress,
+        //   idempotencyKeyTTL:
+        //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        // }
       ),
-      generateImprovementActionPlan.trigger(
+      generateImprovementActionPlan.triggerAndWait(
         {
           name: payload.name,
           email: payload.email,
@@ -516,14 +516,14 @@ export const generateStudentPrepPack = schemaTask({
           projects_done: payload.projects_done,
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
-        },
-        {
-          idempotencyKey: keys.improvementActionPlan,
-          idempotencyKeyTTL:
-            process.env.NODE_ENV !== "production" ? "10m" : "14d",
         }
+        // {
+        //   idempotencyKey: keys.improvementActionPlan,
+        //   idempotencyKeyTTL:
+        //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        // }
       ),
-      generateRecommendedProjectIdeas.trigger(
+      generateRecommendedProjectIdeas.triggerAndWait(
         {
           name: payload.name,
           email: payload.email,
@@ -531,14 +531,14 @@ export const generateStudentPrepPack = schemaTask({
           projects_done: payload.projects_done,
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
-        },
-        {
-          idempotencyKey: keys.recommendedProjectIdeas,
-          idempotencyKeyTTL:
-            process.env.NODE_ENV !== "production" ? "10m" : "14d",
         }
+        // {
+        //   idempotencyKey: keys.recommendedProjectIdeas,
+        //   idempotencyKeyTTL:
+        //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        // }
       ),
-      generateResourceRecommendations.trigger(
+      generateResourceRecommendations.triggerAndWait(
         {
           name: payload.name,
           email: payload.email,
@@ -546,31 +546,37 @@ export const generateStudentPrepPack = schemaTask({
           projects_done: payload.projects_done,
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
-        },
-        {
-          idempotencyKey: keys.resourceRecommendations,
-          idempotencyKeyTTL:
-            process.env.NODE_ENV !== "production" ? "10m" : "14d",
         }
+        // {
+        //   idempotencyKey: keys.resourceRecommendations,
+        //   idempotencyKeyTTL:
+        //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        // }
       ),
     ])
 
-    logger.log("All tasks triggered")
+    logger.log("All tasks ran", {
+      inspirationalMessage,
+      careerProgress,
+      improvementActionPlan,
+      recommendedProjectIdeas,
+      resourceRecommendations,
+    })
 
     const groupPoll = await Promise.all([
-      runs.poll(inspirationalMessage, {
+      runs.poll(inspirationalMessage.id, {
         pollIntervalMs: 1000,
       }),
-      runs.poll(careerProgress, {
+      runs.poll(careerProgress.id, {
         pollIntervalMs: 2000,
       }),
-      runs.poll(improvementActionPlan, {
+      runs.poll(improvementActionPlan.id, {
         pollIntervalMs: 3000,
       }),
-      runs.poll(recommendedProjectIdeas, {
+      runs.poll(recommendedProjectIdeas.id, {
         pollIntervalMs: 4000,
       }),
-      runs.poll(resourceRecommendations, {
+      runs.poll(resourceRecommendations.id, {
         pollIntervalMs: 5000,
       }),
     ])
