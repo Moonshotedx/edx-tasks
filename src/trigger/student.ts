@@ -271,6 +271,10 @@ The response must be in the following json format:
   }[]
 }
 \`\`\`
+
+Make sure the resources links above are more related to fundamental concepts and not just a tutorial on how to build the project.
+This is important as the student should be able to understand the concepts behind the project and not just how to build it.
+And also make sure that the links are links to wiki concepts, blog posts, or videos that explain the concepts in detail, and make sure these links are valid and working.
 `,
       name: "mentor",
     })
@@ -422,155 +426,6 @@ export const generateStudentPrepPack = schemaTask({
   run: async (payload) => {
     logger.log("env", { env: process.env.NODE_ENV })
 
-    // const keys = {
-    //   inspirationalMessage: await idempotencyKeys.create(
-    //     generateHash({
-    //       email: payload.email,
-    //       aspiring_job_roles: payload.aspiring_job_roles,
-    //       name: payload.name,
-    //       env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-    //     })
-    //   ),
-    //   careerProgress: await idempotencyKeys.create(
-    //     generateHash({
-    //       email: payload.email,
-    //       aspiring_job_roles: payload.aspiring_job_roles,
-    //       name: payload.name,
-    //       projects_done: payload.projects_done,
-    //       education_experiences: payload.education_experiences,
-    //       certifications: payload.certifications,
-    //       env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-    //     })
-    //   ),
-    //   improvementActionPlan: await idempotencyKeys.create(
-    //     generateHash({
-    //       email: payload.email,
-    //       aspiring_job_roles: payload.aspiring_job_roles,
-    //       name: payload.name,
-    //       projects_done: payload.projects_done,
-    //       education_experiences: payload.education_experiences,
-    //       certifications: payload.certifications,
-    //       env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-    //     })
-    //   ),
-    //   recommendedProjectIdeas: await idempotencyKeys.create(
-    //     generateHash({
-    //       email: payload.email,
-    //       aspiring_job_roles: payload.aspiring_job_roles,
-    //       name: payload.name,
-    //       projects_done: payload.projects_done,
-    //       education_experiences: payload.education_experiences,
-    //       certifications: payload.certifications,
-    //       env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-    //     })
-    //   ),
-    //   resourceRecommendations: await idempotencyKeys.create(
-    //     generateHash({
-    //       email: payload.email,
-    //       aspiring_job_roles: payload.aspiring_job_roles,
-    //       name: payload.name,
-    //       projects_done: payload.projects_done,
-    //       education_experiences: payload.education_experiences,
-    //       certifications: payload.certifications,
-    //       env: process.env.NODE_ENV !== "production" ? "test" : undefined,
-    //     })
-    //   ),
-    // }
-    //
-    // logger.log("Idempotency keys generated")
-
-    // const [
-    //   inspirationalMessage,
-    //   careerProgress,
-    //   improvementActionPlan,
-    //   recommendedProjectIdeas,
-    //   resourceRecommendations,
-    // ] = await Promise.all([
-    //   await generateInpirationalMessage.trigger(
-    //     {
-    //       name: payload.name,
-    //       email: payload.email,
-    //       aspiring_companies: payload.aspiring_companies,
-    //       aspiring_job_roles: payload.aspiring_job_roles,
-    //     }
-    //     // {
-    //     // idempotencyKey: keys.inspirationalMessage,
-    //     // idempotencyKeyTTL:
-    //     //   process.env.NODE_ENV !== "production" ? "10m" : "14d",
-    //     // }
-    //   ),
-    //   generateCareerProgress.trigger(
-    //     {
-    //       name: payload.name,
-    //       email: payload.email,
-    //       aspiring_job_roles: payload.aspiring_job_roles,
-    //       projects_done: payload.projects_done,
-    //       education_experiences: payload.education_experiences,
-    //       certifications: payload.certifications,
-    //     }
-    //     // {
-    //     //   idempotencyKey: keys.careerProgress,
-    //     //   idempotencyKeyTTL:
-    //     //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
-    //     // }
-    //   ),
-    //   generateImprovementActionPlan.trigger(
-    //     {
-    //       name: payload.name,
-    //       email: payload.email,
-    //       aspiring_job_roles: payload.aspiring_job_roles,
-    //       projects_done: payload.projects_done,
-    //       education_experiences: payload.education_experiences,
-    //       certifications: payload.certifications,
-    //     }
-    //     // {
-    //     //   idempotencyKey: keys.improvementActionPlan,
-    //     //   idempotencyKeyTTL:
-    //     //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
-    //     // }
-    //   ),
-    //   generateRecommendedProjectIdeas.trigger(
-    //     {
-    //       name: payload.name,
-    //       email: payload.email,
-    //       aspiring_job_roles: payload.aspiring_job_roles,
-    //       projects_done: payload.projects_done,
-    //       education_experiences: payload.education_experiences,
-    //       certifications: payload.certifications,
-    //     }
-    //     // {
-    //     //   idempotencyKey: keys.recommendedProjectIdeas,
-    //     //   idempotencyKeyTTL:
-    //     //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
-    //     // }
-    //   ),
-    //   generateResourceRecommendations.trigger(
-    //     {
-    //       name: payload.name,
-    //       email: payload.email,
-    //       aspiring_job_roles: payload.aspiring_job_roles,
-    //       projects_done: payload.projects_done,
-    //       education_experiences: payload.education_experiences,
-    //       certifications: payload.certifications,
-    //     }
-    //     // {
-    //     //   idempotencyKey: keys.resourceRecommendations,
-    //     //   idempotencyKeyTTL:
-    //     //     process.env.NODE_ENV !== "production" ? "10m" : "14d",
-    //     // }
-    //   ),
-    // ])
-
-    // logger.log("All tasks ran", {
-    //   inspirationalMessage,
-    //   careerProgress,
-    //   improvementActionPlan,
-    //   recommendedProjectIdeas,
-    //   resourceRecommendations,
-    // })
-
-    // replace the above with batch trigger
-
     const batchRes = await batch.triggerAndWait([
       {
         id: "inspire-student",
@@ -627,24 +482,6 @@ export const generateStudentPrepPack = schemaTask({
       },
     ])
 
-    // const groupPoll = await Promise.all([
-    //   runs.poll(inspirationalMessage.id, {
-    //     pollIntervalMs: 1000,
-    //   }),
-    //   runs.poll(careerProgress.id, {
-    //     pollIntervalMs: 2000,
-    //   }),
-    //   runs.poll(improvementActionPlan.id, {
-    //     pollIntervalMs: 3000,
-    //   }),
-    //   runs.poll(recommendedProjectIdeas.id, {
-    //     pollIntervalMs: 4000,
-    //   }),
-    //   runs.poll(resourceRecommendations.id, {
-    //     pollIntervalMs: 5000,
-    //   }),
-    // ])
-
     const outputs = batchRes.runs.map((r) => {
       if (r.ok) {
         logger.log("Task completed", r.output)
@@ -652,6 +489,7 @@ export const generateStudentPrepPack = schemaTask({
       }
       return null
     })
+
     logger.log("Outputs", { outputs })
 
     const final = {
