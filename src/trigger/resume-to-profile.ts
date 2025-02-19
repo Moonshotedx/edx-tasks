@@ -15,7 +15,7 @@ const dify_key = process.env.RESUME_TO_PROFILE_KEY
 export const resumeToProfileGenerator = schemaTask({
   id: "resume-to-profile",
   retry: {
-    maxAttempts: 5,
+    maxAttempts: 3,
     factor: 1.5,
     randomize: true,
   },
