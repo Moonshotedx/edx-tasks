@@ -531,12 +531,9 @@ export const generateStudentPrepPack = schemaTask({
       recommendProjectsTask.trigger(
         {
           profile: {
-            name: payload.name,
-            email: payload.email,
-            aspiring_job_roles: payload.aspiring_job_roles,
             projects_done: payload.projects_done,
-            education_experiences: payload.education_experiences,
             certifications: payload.certifications,
+            aspiring_job_roles: payload.aspiring_job_roles,
           },
         },
         {
