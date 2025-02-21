@@ -10,7 +10,7 @@ const recommendProjects = z.object({
 
 const dify_key = process.env.DIFY_PROJECT_REC_FLOW
 
-export const resumeToProfileGenerator = schemaTask({
+export const recommendProjectsTask = schemaTask({
   id: "recommend-projects",
   retry: {
     maxAttempts: 3,
@@ -36,21 +36,10 @@ export const resumeToProfileGenerator = schemaTask({
   },
 })
 
-interface Profile {
-  experiences: Array<{
-    id: number
-    title: string
-    organisation: string
-    type: string
-    description: string
-    location: string
-    start_date: string
-    end_date: string
-    is_ongoing: boolean
-    link: string
-    skills: string[]
-    order: number
-  }>
+type Project = {
+  title: string
+  description: string
+  resources: string[]
 }
 
 interface ApiResponse {
@@ -61,7 +50,7 @@ interface ApiResponse {
     workflow_id: string
     status: string
     outputs: {
-      profile: string
+      data: string
     }
     error: null | string
     elapsed_time: number
@@ -94,8 +83,23 @@ async function generateProjects(profile?: any): Promise<any> {
     )
     logger.log("API call successful", { response: response.data })
     const apiResponse: ApiResponse = response.data
-    const profile: Profile = JSON.parse(apiResponse.data.outputs.profile)
-    return { profile }
+    const response_data: {
+      projects: Project[]
+    } = JSON.parse(apiResponse.data.outputs.data)
+
+    const responseSchema = z.object({
+      projects: z.array(
+        z.object({
+          title: z.string(),
+          description: z.string(),
+          resources: z.array(z.string()).optional(),
+        })
+      ),
+    })
+
+    const parsedOutput = responseSchema.parse(response_data)
+
+    return parsedOutput
   } catch (error) {
     logger.error("Error making API call", { error })
     throw error

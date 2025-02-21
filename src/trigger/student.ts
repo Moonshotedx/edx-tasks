@@ -3,6 +3,7 @@ import { idempotencyKeys, logger, runs, schemaTask } from "@trigger.dev/sdk/v3"
 import { z } from "zod"
 
 import { chat, searchKnowledgeBase } from "../lib/makima"
+import { recommendProjectsTask } from "./recommed-projects"
 
 type YoutubeMetadata = {
   url: string
@@ -527,14 +528,16 @@ export const generateStudentPrepPack = schemaTask({
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
         }
       ),
-      generateRecommendedProjectIdeas.trigger(
+      recommendProjectsTask.trigger(
         {
-          name: payload.name,
-          email: payload.email,
-          aspiring_job_roles: payload.aspiring_job_roles,
-          projects_done: payload.projects_done,
-          education_experiences: payload.education_experiences,
-          certifications: payload.certifications,
+          profile: {
+            name: payload.name,
+            email: payload.email,
+            aspiring_job_roles: payload.aspiring_job_roles,
+            projects_done: payload.projects_done,
+            education_experiences: payload.education_experiences,
+            certifications: payload.certifications,
+          },
         },
         {
           idempotencyKey: keys.recommendedProjectIdeas,
