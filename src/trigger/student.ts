@@ -1,5 +1,5 @@
 import { createHash } from "crypto"
-import { batch, logger, schemaTask } from "@trigger.dev/sdk/v3"
+import { idempotencyKeys, logger, runs, schemaTask } from "@trigger.dev/sdk/v3"
 import { z } from "zod"
 
 import { chat, searchKnowledgeBase } from "../lib/makima"
@@ -420,19 +420,85 @@ export const generateStudentPrepPack = schemaTask({
   run: async (payload) => {
     logger.log("env", { env: process.env.NODE_ENV })
 
-    const batchRes = await batch.triggerAndWait([
-      {
-        id: "inspire-student",
-        payload: {
+    const keys = {
+      inspirationalMessage: await idempotencyKeys.create(
+        generateHash({
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          name: payload.name,
+          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+        })
+      ),
+      careerProgress: await idempotencyKeys.create(
+        generateHash({
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          name: payload.name,
+          projects_done: payload.projects_done,
+          education_experiences: payload.education_experiences,
+          certifications: payload.certifications,
+          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+        })
+      ),
+      improvementActionPlan: await idempotencyKeys.create(
+        generateHash({
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          name: payload.name,
+          projects_done: payload.projects_done,
+          education_experiences: payload.education_experiences,
+          certifications: payload.certifications,
+          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+        })
+      ),
+      recommendedProjectIdeas: await idempotencyKeys.create(
+        generateHash({
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          name: payload.name,
+          projects_done: payload.projects_done,
+          education_experiences: payload.education_experiences,
+          certifications: payload.certifications,
+          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+        })
+      ),
+      resourceRecommendations: await idempotencyKeys.create(
+        generateHash({
+          email: payload.email,
+          aspiring_job_roles: payload.aspiring_job_roles,
+          name: payload.name,
+          projects_done: payload.projects_done,
+          education_experiences: payload.education_experiences,
+          certifications: payload.certifications,
+          env: process.env.NODE_ENV !== "production" ? "test" : undefined,
+        })
+      ),
+    }
+
+    logger.log("Idempotency keys generated")
+
+    const [
+      inspirationalMessage,
+      careerProgress,
+      improvementActionPlan,
+      recommendedProjectIdeas,
+      resourceRecommendations,
+    ] = await Promise.all([
+      await generateInpirationalMessage.trigger(
+        {
           name: payload.name,
           email: payload.email,
           aspiring_companies: payload.aspiring_companies,
           aspiring_job_roles: payload.aspiring_job_roles,
         },
-      },
-      {
-        id: "get-career-progress",
-        payload: {
+        {
+          idempotencyKey: keys.inspirationalMessage,
+          idempotencyKeyTTL:
+            process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        }
+      ),
+      generateCareerProgress.trigger(
+        {
           name: payload.name,
           email: payload.email,
           aspiring_job_roles: payload.aspiring_job_roles,
@@ -440,10 +506,14 @@ export const generateStudentPrepPack = schemaTask({
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
         },
-      },
-      {
-        id: "generate-improvement-action-plan",
-        payload: {
+        {
+          idempotencyKey: keys.careerProgress,
+          idempotencyKeyTTL:
+            process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        }
+      ),
+      generateImprovementActionPlan.trigger(
+        {
           name: payload.name,
           email: payload.email,
           aspiring_job_roles: payload.aspiring_job_roles,
@@ -451,10 +521,14 @@ export const generateStudentPrepPack = schemaTask({
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
         },
-      },
-      {
-        id: "generate-recommended-project-ideas",
-        payload: {
+        {
+          idempotencyKey: keys.improvementActionPlan,
+          idempotencyKeyTTL:
+            process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        }
+      ),
+      generateRecommendedProjectIdeas.trigger(
+        {
           name: payload.name,
           email: payload.email,
           aspiring_job_roles: payload.aspiring_job_roles,
@@ -462,10 +536,14 @@ export const generateStudentPrepPack = schemaTask({
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
         },
-      },
-      {
-        id: "generate-resource-recommendations",
-        payload: {
+        {
+          idempotencyKey: keys.recommendedProjectIdeas,
+          idempotencyKeyTTL:
+            process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        }
+      ),
+      generateResourceRecommendations.trigger(
+        {
           name: payload.name,
           email: payload.email,
           aspiring_job_roles: payload.aspiring_job_roles,
@@ -473,28 +551,43 @@ export const generateStudentPrepPack = schemaTask({
           education_experiences: payload.education_experiences,
           certifications: payload.certifications,
         },
-      },
+        {
+          idempotencyKey: keys.resourceRecommendations,
+          idempotencyKeyTTL:
+            process.env.NODE_ENV !== "production" ? "10m" : "14d",
+        }
+      ),
     ])
 
-    const outputs = batchRes.runs.map((r) => {
-      if (r.ok) {
-        logger.log("Task completed", r.output)
-        return r.output
-      }
-      return null
-    })
+    logger.log("All tasks triggered")
 
-    logger.log("Outputs", { outputs })
+    const groupPoll = await Promise.all([
+      runs.poll(inspirationalMessage, {
+        pollIntervalMs: 1000,
+      }),
+      runs.poll(careerProgress, {
+        pollIntervalMs: 2000,
+      }),
+      runs.poll(improvementActionPlan, {
+        pollIntervalMs: 3000,
+      }),
+      runs.poll(recommendedProjectIdeas, {
+        pollIntervalMs: 4000,
+      }),
+      runs.poll(resourceRecommendations, {
+        pollIntervalMs: 5000,
+      }),
+    ])
 
     const final = {
-      inspirationalMessage: outputs[0],
-      careerProgress: outputs[1],
-      improvementActionPlan: outputs[2],
-      recommendedProjectIdeas: outputs[3],
-      resourceRecommendations: outputs[4],
+      inspirationalMessage: groupPoll[0].output,
+      careerProgress: groupPoll[1].output,
+      improvementActionPlan: groupPoll[2].output,
+      recommendedProjectIdeas: groupPoll[3].output,
+      resourceRecommendations: groupPoll[4].output,
     }
 
-    logger.log("All tasks completed")
+    logger.log("All tasks completed", final)
 
     return final
   },
