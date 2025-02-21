@@ -493,6 +493,7 @@ export const generateStudentPrepPack = schemaTask({
           aspiring_job_roles: payload.aspiring_job_roles,
         },
         {
+          tags: [payload.email],
           idempotencyKey: keys.inspirationalMessage,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
@@ -508,6 +509,7 @@ export const generateStudentPrepPack = schemaTask({
           certifications: payload.certifications,
         },
         {
+          tags: [payload.email],
           idempotencyKey: keys.careerProgress,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
@@ -523,6 +525,7 @@ export const generateStudentPrepPack = schemaTask({
           certifications: payload.certifications,
         },
         {
+          tags: [payload.email],
           idempotencyKey: keys.improvementActionPlan,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
@@ -537,6 +540,7 @@ export const generateStudentPrepPack = schemaTask({
           },
         },
         {
+          tags: [payload.email],
           idempotencyKey: keys.recommendedProjectIdeas,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
@@ -552,6 +556,7 @@ export const generateStudentPrepPack = schemaTask({
           certifications: payload.certifications,
         },
         {
+          tags: [payload.email],
           idempotencyKey: keys.resourceRecommendations,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
