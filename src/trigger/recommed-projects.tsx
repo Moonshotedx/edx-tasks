@@ -92,14 +92,35 @@ async function generateProjects(profile?: any): Promise<any> {
         z.object({
           title: z.string(),
           description: z.string(),
-          resources: z.array(z.string()).optional(),
+          resources: z.array(z.string()),
         })
       ),
     })
 
     const parsedOutput = responseSchema.parse(response_data)
 
-    return parsedOutput
+    // check all links in resources and make sure they return non 400s and 500s
+    const validProjects = await Promise.all(
+      parsedOutput.projects.map(async (project) => {
+        const validResources = await Promise.all(
+          project.resources.map(async (resource) => {
+            try {
+              await axios.get(resource)
+              return resource
+            } catch (error) {
+              logger.error("Invalid resource link", { resource, error })
+              return null
+            }
+          })
+        )
+        return {
+          ...project,
+          resources: validResources.filter((resource) => !!resource),
+        }
+      })
+    )
+
+    return { ...parsedOutput, projects: validProjects }
   } catch (error) {
     logger.error("Error making API call", { error })
     throw error
