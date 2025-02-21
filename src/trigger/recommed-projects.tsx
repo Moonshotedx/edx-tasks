@@ -13,7 +13,7 @@ const dify_key = process.env.DIFY_PROJECT_REC_FLOW
 export const recommendProjectsTask = schemaTask({
   id: "recommend-projects",
   retry: {
-    maxAttempts: 3,
+    maxAttempts: 5,
     factor: 1.5,
     randomize: true,
   },
@@ -99,7 +99,7 @@ async function generateProjects(profile?: any): Promise<any> {
 
     const parsedOutput = responseSchema.parse(response_data)
 
-    // check all links in resources and make sure they return non 400s and 500s
+    // Validate each resource link and remove dead links
     const validProjects = await Promise.all(
       parsedOutput.projects.map(async (project) => {
         const validResources = await Promise.all(
@@ -120,7 +120,17 @@ async function generateProjects(profile?: any): Promise<any> {
       })
     )
 
-    return { ...parsedOutput, projects: validProjects }
+    // Remove projects that don't have any valid links
+    const filteredProjects = validProjects.filter(
+      (project) => project.resources.length > 0
+    )
+
+    // Throw an error if fewer than 3 projects remain
+    if (filteredProjects.length < 3) {
+      throw new Error("Insufficient projects with valid links")
+    }
+
+    return { ...parsedOutput, projects: filteredProjects }
   } catch (error) {
     logger.error("Error making API call", { error })
     throw error
