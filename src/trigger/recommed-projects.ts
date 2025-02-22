@@ -126,7 +126,7 @@ async function generateProjects(profile?: any): Promise<any> {
     )
 
     // Throw an error if fewer than 3 projects remain
-    if (filteredProjects.length < 3) {
+    if (!filteredProjects.length) {
       throw new Error("Insufficient projects with valid links")
     }
 
