@@ -230,7 +230,7 @@ NOTE: Subtitle in the above is gonna be shown under the respective key as a subt
   },
 })
 
-export const generateRecommendedProjectIdeas = schemaTask({
+export const generateRecommendedProjectIdeasDeprecated = schemaTask({
   id: "generate-recommended-project-ideas",
   retry: {
     maxAttempts: 5,
