@@ -538,6 +538,7 @@ export const generateStudentPrepPack = schemaTask({
             certifications: payload.certifications,
             aspiring_job_roles: payload.aspiring_job_roles,
           },
+          search_terms: payload.aspiring_job_roles,
         },
         {
           tags: [payload.email],

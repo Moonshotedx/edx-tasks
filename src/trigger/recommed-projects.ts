@@ -6,6 +6,7 @@ import { z } from "zod"
 
 const recommendProjects = z.object({
   profile: z.any(),
+  search_terms: z.array(z.string()).optional(),
 })
 
 const dify_key = process.env.DIFY_PROJECT_REC_FLOW
@@ -61,10 +62,14 @@ interface ApiResponse {
   }
 }
 
-async function generateProjects(profile?: any): Promise<any> {
+async function generateProjects(
+  profile?: any,
+  search_terms?: string[]
+): Promise<any> {
   const data = {
     inputs: {
       profile: JSON.stringify(profile || {}),
+      search_terms,
     },
     response_mode: "blocking",
     user: "trigger",
