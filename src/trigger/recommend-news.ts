@@ -7,7 +7,7 @@ import { z } from "zod"
 const recommendNews = z.object({
   search_terms: z.array(z.string()),
   // Default to 5 results, max 10
-  limit: z.number().min(1).max(10).default(5),
+  limit: z.number().min(1).max(25).default(5),
 })
 
 export const duck_duck = queue({
