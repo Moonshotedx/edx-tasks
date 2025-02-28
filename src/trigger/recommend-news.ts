@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { logger, schemaTask } from "@trigger.dev/sdk/v3"
+import { logger, queue, schemaTask } from "@trigger.dev/sdk/v3"
 import { NewsResult, SafeSearchType, searchNews } from "duck-duck-scrape"
 import { z } from "zod"
 
@@ -10,6 +10,11 @@ const recommendNews = z.object({
   limit: z.number().min(1).max(10).default(5),
 })
 
+export const duck_duck = queue({
+  name: "duck_duck",
+  concurrencyLimit: 10,
+})
+
 export const recommendNewsTask = schemaTask({
   id: "recommend-news",
   retry: {
@@ -17,9 +22,7 @@ export const recommendNewsTask = schemaTask({
     factor: 1.5,
     randomize: true,
   },
-  queue: {
-    concurrencyLimit: 10,
-  },
+  queue: duck_duck,
   maxDuration: 120,
   schema: recommendNews,
 
