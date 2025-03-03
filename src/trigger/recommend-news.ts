@@ -18,8 +18,8 @@ export const duck_duck = queue({
 export const recommendNewsTask = schemaTask({
   id: "recommend-news",
   retry: {
-    maxAttempts: 3,
-    factor: 1.5,
+    maxAttempts: 10,
+    factor: 1.8,
     randomize: true,
   },
   queue: duck_duck,
