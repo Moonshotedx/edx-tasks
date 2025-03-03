@@ -12,7 +12,7 @@ const recommendNews = z.object({
 
 export const duck_duck = queue({
   name: "duck_duck",
-  concurrencyLimit: 10,
+  concurrencyLimit: 15,
 })
 
 export const recommendNewsTask = schemaTask({

@@ -4,6 +4,8 @@ import { logger, schemaTask } from "@trigger.dev/sdk/v3"
 import axios from "axios"
 import { z } from "zod"
 
+import { duck_duck } from "./recommend-news"
+
 const recommendProjects = z.object({
   profile: z.any(),
   search_terms: z.array(z.string()).optional(),
@@ -18,6 +20,7 @@ export const recommendProjectsTask = schemaTask({
     factor: 1.5,
     randomize: true,
   },
+  queue: duck_duck,
   maxDuration: 300,
   schema: recommendProjects,
 
