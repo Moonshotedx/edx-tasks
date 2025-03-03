@@ -8,8 +8,10 @@ import {
   runs,
   schemaTask,
 } from "@trigger.dev/sdk/v3"
-import { NewsResult, SafeSearchType, searchNews } from "duck-duck-scrape"
+import { SafeSearchType } from "duck-duck-scrape"
 import { z } from "zod"
+
+import { robustNewsSearch } from "../utils/duck-duck-wrapper"
 
 /**
  * Schema for the recommendNews task payload.
@@ -70,8 +72,8 @@ export const searchNewsByTermTask = schemaTask({
       const term = payload.term
       logger.log(`Searching news for term: ${term}`)
 
-      // Call the news search API
-      const newsResults = await searchNews(term, {
+      // Call our robust news search implementation instead of the original
+      const newsResults = await robustNewsSearch(term, {
         safeSearch: SafeSearchType.MODERATE,
       })
 
