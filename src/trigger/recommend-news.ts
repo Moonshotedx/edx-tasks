@@ -58,43 +58,41 @@ async function fetchRelevantNews(
   const processedUrls = new Set<string>()
 
   try {
-    // Process each search term until we have enough results
-    for (const term of searchTerms) {
-      if (allResults.length >= limit) break
+    // Combine all search terms into a single query
+    const combinedQuery = searchTerms.join(" OR ")
 
-      logger.log(`Searching news for: ${term}`)
+    logger.log(`Searching news for combined query: ${combinedQuery}`)
 
-      try {
-        // Use the dedicated news search API
-        const newsResults = await searchNews(term, {
-          safeSearch: SafeSearchType.MODERATE,
-        })
+    try {
+      // Make a single call to the news search API with combined terms
+      const newsResults = await searchNews(combinedQuery, {
+        safeSearch: SafeSearchType.MODERATE,
+      })
 
-        if (newsResults.results && newsResults.results.length > 0) {
-          // Process and transform news results
-          const newsItems = newsResults.results
-            .filter((item) => {
-              if (!item.url || processedUrls.has(item.url)) {
-                return false
-              }
-              processedUrls.add(item.url)
-              return true
-            })
-            .map((item) => ({
-              title: item.title || "Untitled",
-              description: item.excerpt || "",
-              url: item.url,
-              source: item.syndicate || "Unknown Source",
-              date: item.date,
-              image: item.image,
-            }))
-            .slice(0, limit - allResults.length)
+      if (newsResults.results && newsResults.results.length > 0) {
+        // Process and transform news results
+        const newsItems = newsResults.results
+          .filter((item) => {
+            if (!item.url || processedUrls.has(item.url)) {
+              return false
+            }
+            processedUrls.add(item.url)
+            return true
+          })
+          .map((item) => ({
+            title: item.title || "Untitled",
+            description: item.excerpt || "",
+            url: item.url,
+            source: item.syndicate || "Unknown Source",
+            date: item.date,
+            image: item.image,
+          }))
+          .slice(0, limit)
 
-          allResults.push(...newsItems)
-        }
-      } catch (err) {
-        logger.error("Error searching for news", { term, error: err })
+        allResults.push(...newsItems)
       }
+    } catch (err) {
+      logger.error("Error searching for news", { combinedQuery, error: err })
     }
 
     // If we couldn't find any results, throw an error
