@@ -99,9 +99,9 @@ export const searchNewsByTermTask = schemaTask({
         allResults.push(...newsItems)
       }
 
-      // If we couldn't find any results, throw an error
+      // Return empty array instead of throwing an error when no results found
       if (allResults.length === 0) {
-        throw new Error(`No news items found for the search term: ${term}`)
+        logger.warn(`No news items found for search term: ${term}`, { term })
       }
 
       return allResults
@@ -235,6 +235,9 @@ export const recommendNewsTask = schemaTask({
 
     logger.log("Generated news recommendations", {
       count: limitedResults.length,
+      termsWithoutResults: payload.search_terms.filter(
+        (term) => !termsWithResults.includes(term)
+      ),
       distribution: termsWithResults.map(
         (term) =>
           `${term}: ${termResults[term].length} found, ${
