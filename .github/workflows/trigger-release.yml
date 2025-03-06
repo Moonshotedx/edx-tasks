@@ -28,18 +28,24 @@ jobs:
       - name: Login to Ark registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.REGISTRY_URL }}
+          registry: ghcr.io
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
+      # - name: Login to Ark registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ${{ secrets.REGISTRY_URL }}
+      #     username: ${{ secrets.REGISTRY_USERNAME }}
+      #     password: ${{ secrets.REGISTRY_PASSWORD }}
 
       - name: 🚀 Deploy Tasks
         env:
           TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
           TRIGGER_API_URL: ${{ secrets.TRIGGER_API_URL }}
-          REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
+          REGISTRY_URL: ghcr.io
         run: |
           # Deploy to staging environment
-          bunx trigger.dev@latest deploy --self-hosted --push --registry "$REGISTRY_URL" --env staging
+          bunx trigger.dev@3.3.16 deploy --self-hosted --push --registry "ghcr.io/moonshotedx" --env staging
 
           # Deploy to production environment
-          bunx trigger.dev@latest deploy --self-hosted --push --registry "$REGISTRY_URL" --env prod
+          bunx trigger.dev@3.3.16 deploy --self-hosted --push --registry "ghcr.io/moonshotedx" --env prod

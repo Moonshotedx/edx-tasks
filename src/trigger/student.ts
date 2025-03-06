@@ -3,6 +3,7 @@ import { idempotencyKeys, logger, runs, schemaTask } from "@trigger.dev/sdk/v3"
 import { z } from "zod"
 
 import { chat, searchKnowledgeBase } from "../lib/makima"
+import { recommendProjectsTask } from "./recommed-projects"
 
 type YoutubeMetadata = {
   url: string
@@ -229,7 +230,7 @@ NOTE: Subtitle in the above is gonna be shown under the respective key as a subt
   },
 })
 
-export const generateRecommendedProjectIdeas = schemaTask({
+export const generateRecommendedProjectIdeasDeprecated = schemaTask({
   id: "generate-recommended-project-ideas",
   retry: {
     maxAttempts: 5,
@@ -265,6 +266,10 @@ The response must be in the following json format:
   }[]
 }
 \`\`\`
+
+Make sure the resources links above are more related to fundamental concepts and not just a tutorial on how to build the project.
+This is important as the student should be able to understand the concepts behind the project and not just how to build it.
+And also make sure that the links are links to wiki concepts, blog posts, or videos that explain the concepts in detail, and make sure these links are valid and working.
 `,
       name: "mentor",
     })
@@ -488,6 +493,7 @@ export const generateStudentPrepPack = schemaTask({
           aspiring_job_roles: payload.aspiring_job_roles,
         },
         {
+          tags: [payload.email],
           idempotencyKey: keys.inspirationalMessage,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
@@ -503,6 +509,7 @@ export const generateStudentPrepPack = schemaTask({
           certifications: payload.certifications,
         },
         {
+          tags: [payload.email],
           idempotencyKey: keys.careerProgress,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
@@ -518,21 +525,23 @@ export const generateStudentPrepPack = schemaTask({
           certifications: payload.certifications,
         },
         {
+          tags: [payload.email],
           idempotencyKey: keys.improvementActionPlan,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
         }
       ),
-      generateRecommendedProjectIdeas.trigger(
+      recommendProjectsTask.trigger(
         {
-          name: payload.name,
-          email: payload.email,
-          aspiring_job_roles: payload.aspiring_job_roles,
-          projects_done: payload.projects_done,
-          education_experiences: payload.education_experiences,
-          certifications: payload.certifications,
+          profile: {
+            projects_done: payload.projects_done,
+            certifications: payload.certifications,
+            aspiring_job_roles: payload.aspiring_job_roles,
+          },
+          search_terms: payload.aspiring_job_roles,
         },
         {
+          tags: [payload.email],
           idempotencyKey: keys.recommendedProjectIdeas,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
@@ -548,6 +557,7 @@ export const generateStudentPrepPack = schemaTask({
           certifications: payload.certifications,
         },
         {
+          tags: [payload.email],
           idempotencyKey: keys.resourceRecommendations,
           idempotencyKeyTTL:
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
