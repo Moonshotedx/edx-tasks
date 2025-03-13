@@ -5,9 +5,8 @@ import path from "path";
 import fs from "fs";
 import axios from "axios";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import dotenv from "dotenv";
 
-dotenv.config(); // Load environment variables
+
 
 // R2 Config
 const R2_ENDPOINT=process.env.R2_ENDPOINT;
