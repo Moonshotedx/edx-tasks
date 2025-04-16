@@ -482,7 +482,7 @@ export const generateStudentPrepPack = schemaTask({
       inspirationalMessage,
       careerProgress,
       improvementActionPlan,
-      recommendedProjectIdeas,
+      // recommendedProjectIdeas,
       resourceRecommendations,
     ] = await Promise.all([
       await generateInpirationalMessage.trigger(
@@ -531,22 +531,22 @@ export const generateStudentPrepPack = schemaTask({
             process.env.NODE_ENV !== "production" ? "10m" : "14d",
         }
       ),
-      recommendProjectsTask.trigger(
-        {
-          profile: {
-            projects_done: payload.projects_done,
-            certifications: payload.certifications,
-            aspiring_job_roles: payload.aspiring_job_roles,
-          },
-          search_terms: payload.aspiring_job_roles,
-        },
-        {
-          tags: [payload.email],
-          idempotencyKey: keys.recommendedProjectIdeas,
-          idempotencyKeyTTL:
-            process.env.NODE_ENV !== "production" ? "10m" : "14d",
-        }
-      ),
+      // recommendProjectsTask.trigger(
+      //   {
+      //     profile: {
+      //       projects_done: payload.projects_done,
+      //       certifications: payload.certifications,
+      //       aspiring_job_roles: payload.aspiring_job_roles,
+      //     },
+      //     search_terms: payload.aspiring_job_roles,
+      //   },
+      //   {
+      //     tags: [payload.email],
+      //     idempotencyKey: keys.recommendedProjectIdeas,
+      //     idempotencyKeyTTL:
+      //       process.env.NODE_ENV !== "production" ? "10m" : "14d",
+      //   }
+      // ),
       generateResourceRecommendations.trigger(
         {
           name: payload.name,
@@ -577,9 +577,9 @@ export const generateStudentPrepPack = schemaTask({
       runs.poll(improvementActionPlan, {
         pollIntervalMs: 3000,
       }),
-      runs.poll(recommendedProjectIdeas, {
-        pollIntervalMs: 4000,
-      }),
+      // runs.poll(recommendedProjectIdeas, {
+      //   pollIntervalMs: 4000,
+      // }),
       runs.poll(resourceRecommendations, {
         pollIntervalMs: 5000,
       }),
@@ -589,8 +589,8 @@ export const generateStudentPrepPack = schemaTask({
       inspirationalMessage: groupPoll[0].output,
       careerProgress: groupPoll[1].output,
       improvementActionPlan: groupPoll[2].output,
-      recommendedProjectIdeas: groupPoll[3].output,
-      resourceRecommendations: groupPoll[4].output,
+      // recommendedProjectIdeas: groupPoll[3].output,
+      resourceRecommendations: groupPoll[3].output,
     }
 
     logger.log("All tasks completed", final)
