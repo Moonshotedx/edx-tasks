@@ -54,7 +54,7 @@ export const generateStageInterviewPrep = schemaTask({
 
     // MCQs (JOB + STAGE DETAILS ONLY)
     const mcqPrompt = `
-You are an interview coach helping candidates prepare for a specific interview stag, generating stage-specific MCQs for interview preparation.
+You are an interview coach helping candidates prepare for a specific interview stage, generating stage-specific MCQs for interview preparation.
 
 Rules:
 - Questions must be directly relevant to BOTH the job role AND this specific interview stage
@@ -64,13 +64,13 @@ Rules:
 - Each question must have 2-4 options.
 - Include a 'hint' and the correct answer via 'correct_index' (0-based).
 
-Return strict JSON:
+Return ONLY a strict JSON object as specified below.
 {
   "mcqs": [
     {
       "question": "string",
-      "options": ["string", "string", "string", "string"],  // 2-4 items
-      "correct_index": 0,                                   // number 0..3
+      "options": ["string", "string", "string", "string"],
+      "correct_index": 0,
       "hint": "string"
     }
   ]
@@ -89,19 +89,29 @@ ${JSON.stringify(stage, null, 2)}
       name: "stage_mcqs",
     })
 
+    const mcqItem = z
+      .object({
+        question: z.string().min(1),
+        options: z.array(z.string().min(1)).min(2).max(4),
+        correct_index: z.number().int().min(0).max(3),
+        hint: z.string().min(1),
+      })
+      .refine((q) => q.correct_index < q.options.length, {
+        path: ["correct_index"],
+        message: "correct_index must index into options",
+      })
     const mcqSchema = z.object({
-      mcqs: z.array(
-          z.object({
-            question: z.string(),
-            options: z.array(z.string()).min(2).max(4),
-            correct_index: z.number().int().min(0).max(3),
-            hint: z.string(),
-          })
-        ).min(5),
+      mcqs: z.array(mcqItem).min(5),
     })
 
-    const mcqJson = JSON.parse(mcqRaw)
-    const mcqs = mcqSchema.parse(mcqJson).mcqs
+    let mcqs: z.infer<typeof mcqSchema>["mcqs"]
+    try {
+      const mcqJson = JSON.parse(mcqRaw)
+      mcqs = mcqSchema.parse(mcqJson).mcqs
+    } catch (error) {
+      logger.error("Failed to parse MCQs from chat response", { error, mcqRaw })
+      throw error
+    }
 
     // Resources/Topics/Suggestions (can use student + job + stage)
     const studentSafe = payload.student ?? {}
@@ -115,7 +125,7 @@ Rules:
 - ADD suggestions on what the student can do and update their profile to be better suited for the job, use job and student details for this.
 - Keep everything concise and actionable.
 
-Return strict JSON:
+Return ONLY a strict JSON object as specified below.
 {
   "topics": ["string", "..."],             // 3-8 key topics for this stage
   "suggestions": ["string", "..."]         // optional list
@@ -141,7 +151,13 @@ ${JSON.stringify(studentSafe, null, 2)}
       topics: z.array(z.string()).min(1).optional(),
       suggestions: z.array(z.string()).optional(),
     })
-    const info = infoSchema.parse(JSON.parse(infoRaw))
+    let info: z.infer<typeof infoSchema>
+    try {
+      info = infoSchema.parse(JSON.parse(infoRaw))
+    } catch (error) {
+      logger.error("Failed to parse info from chat response", { error, infoRaw });
+      throw error
+    }
 
     // search external resources via KB (based on stage + job keywords)
     let resourceSuggestions: YoutubeMetadata[] = []
@@ -160,10 +176,9 @@ ${JSON.stringify(studentSafe, null, 2)}
           k: 5,
         })
 
-        const dedup = found.filter((r, i, arr) => {
-          const j = arr.findIndex((x) => x.metadata.url === r.metadata.url)
-          return i === j
-        })
+        const dedup = [
+          ...new Map(found.map((r) => [r.metadata.url, r])).values(),
+        ]
         resourceSuggestions = dedup.map((r) => r.metadata)
       }
     } catch (e) {
