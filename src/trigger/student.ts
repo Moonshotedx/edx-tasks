@@ -700,3 +700,123 @@ function generateHash(payload: object) {
   hash.update(JSON.stringify(payload))
   return hash.digest("hex")
 }
+
+// Recommend profile highlights for a given job description
+export const recommendProfileHighlightsForJob = schemaTask({
+  id: "recommend-profile-highlights-for-job",
+  retry: { maxAttempts: 5, factor: 1.5, randomize: true },
+  maxDuration: 300,
+  schema: z.object({
+    job: z.object({
+      title: z.string(),
+      description: z.string(),
+    }),
+    student: z.object({
+      projects_done: z.array(z.unknown()).default([]),
+      work_experiences: z.array(z.unknown()).default([]),
+      certifications: z.array(z.unknown()).default([]),
+    }),
+  }),
+
+  run: async (payload, { ctx }) => {
+    logger.log("Payload", { payload, ctx })
+
+    const safeInput = {
+      job: payload.job,
+      student: {
+        projects_done: payload.student.projects_done,
+        work_experiences: payload.student.work_experiences,
+        certifications: payload.student.certifications,
+      },
+    }
+
+    const prompt = `You are ranking a student's existing projects, experiences, and certificates for a target job.
+
+      - Analyze student's profile against target job and recommend most relevant items
+      - Matching criteria should be on - Direct relevance, transferable skills, technical overlap, domain alignment, foundation skills
+      - ONLY choose from the lists provided. Do NOT invent new items.
+      - Return the top 3-6 per category (or fewer if there aren't enough).
+      - Provide a short reason referencing the job description/title why it matches.
+
+  Job details:
+  ${JSON.stringify(safeInput.job, null, 2)}
+
+  Student profile (ONLY pick from these):
+  ${JSON.stringify(safeInput.student, null, 2)}
+
+  Return JSON in this exact shape:
+  {
+    "job_title": string,
+    "job_description": string,
+    "recommended": {
+      "projects": [
+        {
+        "title": string, 
+        "description": string,
+        "reason": string 
+        }
+      ],
+      "experiences": [
+        {
+        "title": string, 
+        "description": string,
+        "reason": string 
+        }
+      ],
+      "certifications": [
+        {
+        "title": string,
+        "description": string, 
+        "reason": string 
+      }
+     ]
+    },
+  }`
+
+    const raw = await chat({
+      agent: "interview-coach",
+      content: prompt,
+      name: "mentor",
+    })
+
+    logger.log("Raw response", { raw })
+
+    const responseSchema = z.object({
+      job_title: z.string(),
+      job_description: z.string(),
+      recommended: z.object({
+        projects: z.array(
+          z.object({
+            title: z.string(),
+            description: z.string(),
+            reason: z.string(),
+          })
+        ),
+        experiences: z.array(
+          z.object({
+            title: z.string(),
+            description: z.string(),
+            reason: z.string(),
+          })
+        ),
+        certifications: z.array(
+          z.object({
+            title: z.string(),
+            reason: z.string(),
+          })
+        ),
+      }),
+    })
+
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(raw)
+    } catch (error) {
+      logger.error("Failed to JSON.parse model output", { error, raw })
+      throw error
+    }
+
+    const validated = responseSchema.parse(parsed)
+    return validated
+  },
+})

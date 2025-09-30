@@ -197,9 +197,3 @@ ${JSON.stringify(studentSafe, null, 2)}
     }
   },
 })
-
-export function generateHash(payload: object) {
-  const hash = createHash("sha256")
-  hash.update(JSON.stringify(payload))
-  return hash.digest("hex")
-}
