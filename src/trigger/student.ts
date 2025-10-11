@@ -710,3 +710,143 @@ function generateHash(payload: object) {
   hash.update(JSON.stringify(payload))
   return hash.digest("hex")
 }
+
+// Recommend profile highlights for a given job description
+export const recommendProfileHighlightsForJob = schemaTask({
+  id: "recommend-profile-highlights-for-job",
+  retry: { maxAttempts: 5, factor: 1.5, randomize: true },
+  maxDuration: 300,
+  schema: z.object({
+    job: z.object({
+      title: z.string(),
+      description: z.string(),
+    }),
+    student: z.object({
+      projects_done: z.array(z.unknown()).default([]),
+      work_experiences: z.array(z.unknown()).default([]),
+      certifications: z.array(z.unknown()).default([]),
+    }),
+  }),
+
+  run: async (payload, { ctx }) => {
+    logger.log("Payload", { payload, ctx })
+
+    type Lite = { id: string; title?: string; description?: string; organisation?: string }
+    const asId = (v: unknown, idx: number) => {
+      const o = (v ?? {}) as any
+      // id extraction; fall back to stable index if truly missing
+      const idRaw = o.id ?? o._id ?? o.key ?? idx
+      return String(idRaw)
+    }
+
+    const projCatalog: Lite[] = payload.student.projects_done.map((p, i) => ({
+      id: asId(p, i),
+      title: (p as any)?.title ?? "",
+      description: (p as any)?.description ?? "",
+      organisation: (p as any)?.organisation ?? (p as any)?.org ?? undefined,
+    }))
+
+    const expCatalog: Lite[] = payload.student.work_experiences.map((w, i) => ({
+      id: asId(w, i),
+      title: (w as any)?.title ?? "",
+      description: (w as any)?.description ?? "",
+      organisation: (w as any)?.organisation ?? (w as any)?.company ?? undefined,
+    }))
+
+    const certCatalog: Lite[] = payload.student.certifications.map((c, i) => ({
+      id: asId(c, i),
+      title: (c as any)?.title ?? "",
+      description: (c as any)?.description ?? "",
+      organisation: (c as any)?.organisation ?? (c as any)?.issuer ?? undefined,
+    }))
+
+    const prompt = `
+        You are ranking a student's existing projects, experiences, and certifications for a target job.
+
+        Rules:
+        - ONLY choose from the catalogs below. Do NOT invent or modify items.
+        - Return the chosen items by their "id" from the catalogs, with an optional "reason".
+        - Pick the most relevant 3–6 per category (or fewer if there aren't enough).
+        - Never include titles/descriptions in the response—only ids and reason. We'll hydrate ids ourselves.
+
+Job details:
+${JSON.stringify(payload.job, null, 2)}
+
+Catalogs (choose ONLY from these):
+{
+  "projects": ${JSON.stringify(projCatalog, null, 2)},
+  "experiences": ${JSON.stringify(expCatalog, null, 2)},
+  "certifications": ${JSON.stringify(certCatalog, null, 2)}
+}
+
+Return JSON in EXACTLY this shape:
+{
+  "job_title": string,
+  "job_description": string,
+  "recommended": {
+    "projects": [{"id": string, "reason"?: string}],
+    "experiences": [{"id": string, "reason"?: string}],
+    "certifications": [{"id": string, "reason"?: string}]
+  }
+}
+`
+
+    const raw = await chat({
+      agent: "interview-coach",
+      content: prompt,
+      name: "mentor",
+    })
+
+    logger.log("Raw response", { raw })
+
+    // Validate the model response (ids only)
+    const responseSchema = z.object({
+      job_title: z.string(),
+      job_description: z.string(),
+      recommended: z.object({
+        projects: z.array(z.object({ id: z.string(), reason: z.string().optional() })),
+        experiences: z.array(z.object({ id: z.string(), reason: z.string().optional() })),
+        certifications: z.array(z.object({ id: z.string(), reason: z.string().optional() })),
+      }),
+    })
+
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(raw)
+    } catch (error) {
+      logger.error("Failed to JSON.parse model output", { error, raw })
+      throw error
+    }
+
+    const validated = responseSchema.parse(parsed)
+
+    const mapById = <T extends Record<string, any>>(arr: T[]) =>
+      new Map(arr.map((x, i) => [String((x as any)?.id ?? (x as any)?._id ?? (x as any)?.key ?? i), x]))
+
+    const projMap = mapById(payload.student.projects_done as any[])
+    const expMap = mapById(payload.student.work_experiences as any[])
+    const certMap = mapById(payload.student.certifications as any[])
+
+    // Hydrate ids to full objects; attach the model reason as __ai_reason
+    const hydrate = (ids: { id: string; reason?: string }[], m: Map<string, any>) =>
+      ids
+        .map(({ id, reason }) => {
+          const full = m.get(id)
+          if (!full) return null
+          return { ...full, __ai_reason: reason }
+        })
+        .filter(Boolean) as any[]
+
+    const hydrated = {
+      job_title: validated.job_title,
+      job_description: validated.job_description,
+      recommended: {
+        projects: hydrate(validated.recommended.projects, projMap),
+        experiences: hydrate(validated.recommended.experiences, expMap),
+        certifications: hydrate(validated.recommended.certifications, certMap),
+      },
+    }
+
+    return hydrated
+  },
+})
