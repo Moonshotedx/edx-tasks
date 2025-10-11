@@ -811,7 +811,7 @@ Return JSON in EXACTLY this shape:
     const validated = responseSchema.parse(parsed)
 
     const mapById = <T extends Record<string, any>>(arr: T[]) =>
-      new Map(arr.map((x, i) => [String((x as any)?.id ?? (x as any)?._id ?? i), x]))
+      new Map(arr.map((x, i) => [String((x as any)?.id ?? (x as any)?._id ?? (x as any)?.key ?? i), x]))
 
     const projMap = mapById(payload.student.projects_done as any[])
     const expMap = mapById(payload.student.work_experiences as any[])
