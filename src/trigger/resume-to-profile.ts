@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { logger, schemaTask } from "@trigger.dev/sdk/v3"
+import { logger, schemaTask } from "@trigger.dev/sdk"
 import axios from "axios"
 import { z } from "zod"
 

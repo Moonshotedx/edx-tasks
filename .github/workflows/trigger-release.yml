@@ -44,8 +44,7 @@ jobs:
           TRIGGER_API_URL: ${{ secrets.TRIGGER_API_URL }}
           REGISTRY_URL: ghcr.io
         run: |
-          # Deploy to staging environment
-          bunx trigger.dev@3.3.16 deploy --self-hosted --push --registry "ghcr.io/moonshotedx" --env staging
-
-          # Deploy to production environment
-          bunx trigger.dev@3.3.16 deploy --self-hosted --push --registry "ghcr.io/moonshotedx" --env prod
+          # Self-hosted v4 builds locally and pushes to the registry
+          # configured on the instance. Docker must already be logged in.
+          bunx trigger.dev@4.8.3 deploy --skip-update-check --env staging
+          bunx trigger.dev@4.8.3 deploy --skip-update-check --env prod

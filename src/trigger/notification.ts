@@ -1,4 +1,4 @@
-import { logger, schemaTask } from "@trigger.dev/sdk/v3"
+import { logger, schemaTask } from "@trigger.dev/sdk"
 import { SendMailClient } from "zeptomail"
 import { z } from "zod"
 

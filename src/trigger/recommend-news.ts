@@ -7,7 +7,7 @@ import {
   queue,
   runs,
   schemaTask,
-} from "@trigger.dev/sdk/v3"
+} from "@trigger.dev/sdk"
 import { SafeSearchType } from "duck-duck-scrape"
 import { z } from "zod"
 

@@ -1,4 +1,4 @@
-import { schedules, logger, schemaTask } from "@trigger.dev/sdk/v3";
+import { schedules, logger, schemaTask } from "@trigger.dev/sdk";
 import axios from "axios";
 import { Client } from "pg";
 

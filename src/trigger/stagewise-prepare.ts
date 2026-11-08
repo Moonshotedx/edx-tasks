@@ -1,5 +1,5 @@
 import { createHash } from "crypto"
-import { idempotencyKeys, logger, runs, schemaTask } from "@trigger.dev/sdk/v3"
+import { idempotencyKeys, logger, runs, schemaTask } from "@trigger.dev/sdk"
 import { z } from "zod"
 import { chat, searchKnowledgeBase } from "../lib/makima"
 

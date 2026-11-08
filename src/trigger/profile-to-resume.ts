@@ -1,4 +1,4 @@
-import { logger, schemaTask } from "@trigger.dev/sdk/v3";
+import { logger, schemaTask } from "@trigger.dev/sdk";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { z } from "zod";
 import path from "path";
